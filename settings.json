@@ -7,14 +7,7 @@
       "Bash(ls:*)",
       "Bash(.venv/bin/python:*)",
       "Bash(npm test:*)",
-      "Bash(/Users/redstar/AgentDev/StockNews/docs/archived/README.md:*)",
-      "Bash(cat:*)",
-      "Read(/Users/redstar/AgentDev/StockAgent/backend/.env*)",
-      "Edit(/Users/redstar/AgentDev/StockAgent/backend/.env*)",
-      "Write(/Users/redstar/AgentDev/StockAgent/backend/.env*)",
-      "Read(/Users/redstar/AgentDev/StockNews/backend/.env*)",
-      "Edit(/Users/redstar/AgentDev/StockNews/backend/.env*)",
-      "Write(/Users/redstar/AgentDev/StockNews/backend/.env*)"
+      "Bash(cat:*)"
     ]
   },
   "hooks": {
@@ -27,17 +20,6 @@
             "command": "~/.claude/scripts/self-verify-gate.sh",
             "timeout": 5,
             "statusMessage": "Self-verification gate..."
-          }
-        ]
-      },
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.claude/scripts/sa-rule-loader.sh",
-            "timeout": 3,
-            "statusMessage": "SA on-demand rule check..."
           }
         ]
       },

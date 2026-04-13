@@ -141,4 +141,4 @@ ralph 연동: 트랙 자동 판별 → 해당 단계만 반복 (A=2~7, B=2~7, C=
 
 ---
 
-_최종 수정: 2026-04-09 — 중복 제거 (SubAgent/Skill은 CLAUDE.md 참조), SA 전용 규칙은 StockAgent/.claude/rules/ 분리_
+_최종 수정: 2026-04-13 — 중복 제거 (SubAgent/Skill은 CLAUDE.md 참조), 프로젝트 전용 규칙은 각 프로젝트 .claude/rules/ 분리_

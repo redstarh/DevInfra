@@ -67,3 +67,13 @@ README.md
 PLUGIN_SCHEMA_NOTES.md
 the-security-guide.md
 statusline-simple.sh
+
+# SA 전용 / ECC 잔재 스크립트
+scripts/sa-rule-loader.sh
+scripts/session-guard.sh
+scripts/session-rule-check.sh
+scripts/orchestration-status.js
+scripts/setup-package-manager.js
+scripts/status-line.sh
+scripts/lib/
+scripts/hooks/
