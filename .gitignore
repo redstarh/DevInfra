@@ -1,0 +1,69 @@
+# 세션/캐시/임시 (추적 불필요)
+sessions/
+session-data/
+session-env/
+shell-snapshots/
+statsig/
+telemetry/
+metrics/
+cache/
+paste-cache/
+file-history/
+debug/
+downloads/
+tasks/
+todos/
+plans/
+ide/
+hud/
+channels/
+teams/
+
+# 플러그인 (각자 설치)
+plugins/
+
+# OMC 런타임 상태
+.omc/
+homunculus/
+
+# 로그/히스토리
+*.log
+*.jsonl
+history.jsonl
+bash-commands.log
+cost-tracker.log
+
+# 프로젝트별 세션 데이터
+projects/
+
+# 백업
+backup-*/
+backups/
+*.backup.*
+
+# 잠금/상태 파일
+.update.lock
+.session-stats.json
+stats-cache.json
+.omc-version.json
+
+# SA 전용 (프로젝트 repo에서 관리)
+omc_config.openclaw.json
+
+# 민감 정보
+.omc-config.json
+
+# OMC/ECC 자동 생성 (플러그인 설치 시 재생성)
+.agents/
+hooks/
+commands/
+docs/
+tests/
+mcp-configs/
+skills/
+
+# 자동 생성 문서
+README.md
+PLUGIN_SCHEMA_NOTES.md
+the-security-guide.md
+statusline-simple.sh
