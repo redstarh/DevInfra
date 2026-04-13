@@ -1,6 +1,6 @@
 #!/bin/bash
 # Claude Code 설정 일괄 설치 스크립트
-# 2026-04-13 기준 — SVG agent 위임 전환 버전
+# 2026-04-13 기준 — ECC 잔재 제거, OMC 전용
 #
 # 사용법:
 #   gh repo clone reddotkim/claude-config ~/.claude
@@ -12,13 +12,12 @@
 #
 # 포함 항목:
 #   - CLAUDE.md (OMC 오케스트레이션 + 개인 규칙)
-#   - AGENTS.md (에이전트 카탈로그)
-#   - settings.json (hooks 7개, plugins 3개, statusLine)
+#   - AGENTS.md (OMC 에이전트 라우팅)
+#   - settings.json (hooks 6개, plugins 2개, statusLine)
 #   - settings.local.json (permissions, env)
-#   - rules/ 15개 (SVG, 4-Lenses, 개발 원칙, 코드 리뷰, TS, Web)
+#   - rules/ 4개 (SVG, 4-Lenses, 개발 원칙, 코드 리뷰)
 #   - scripts/self-verify-gate.sh (SVG hook)
 #   - statusline.sh (모델/컨텍스트/비용 표시)
-#   - .mcp.json, .omc-config.json
 
 set -euo pipefail
 
@@ -29,57 +28,43 @@ BACKUP_DIR="$CLAUDE_DIR/backup-$(date +%Y%m%d-%H%M%S)"
 echo "=== Claude Code 설정 일괄 설치 ==="
 echo ""
 
-# ── Step 0: Prerequisites 자동 설치 ──
-echo "[0/7] Prerequisites 확인 및 설치..."
+# ── Step 0: Prerequisites ──
+echo "[0/6] Prerequisites 확인..."
 
-# Homebrew
+check_or_install() {
+    local cmd="$1" name="$2" install_cmd="$3"
+    if command -v "$cmd" &>/dev/null; then
+        echo "  ✓ $name"
+    else
+        echo "  설치 중: $name..."
+        eval "$install_cmd"
+        echo "  ✓ $name"
+    fi
+}
+
 if ! command -v brew &>/dev/null; then
-    echo "  ⚠ Homebrew 필요. 설치:"
+    echo "  ⚠ Homebrew 필요:"
     echo '  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'
     exit 1
 fi
 echo "  ✓ Homebrew"
 
-# Node.js
-if ! command -v node &>/dev/null; then
-    echo "  설치 중: Node.js..."
-    brew install node
-fi
-echo "  ✓ Node.js $(node --version)"
-
-# jq (hook에서 JSON 파싱에 사용)
-if ! command -v jq &>/dev/null; then
-    echo "  설치 중: jq..."
-    brew install jq
-fi
-echo "  ✓ jq $(jq --version)"
-
-# GitHub CLI (repo 관리용)
-if ! command -v gh &>/dev/null; then
-    echo "  설치 중: GitHub CLI..."
-    brew install gh
-fi
-echo "  ✓ gh $(gh --version | head -1)"
-
-# Claude Code
-if ! command -v claude &>/dev/null; then
-    echo "  설치 중: Claude Code..."
-    npm install -g @anthropic-ai/claude-code
-fi
-echo "  ✓ Claude Code $(claude --version 2>/dev/null | head -1)"
-
+check_or_install "node" "Node.js" "brew install node"
+check_or_install "jq" "jq" "brew install jq"
+check_or_install "gh" "GitHub CLI" "brew install gh"
+check_or_install "claude" "Claude Code" "npm install -g @anthropic-ai/claude-code"
 echo ""
 
 # ── Step 1: Backup ──
-echo "[1/7] 기존 설정 백업..."
+echo "[1/6] 기존 설정 백업..."
 if [ -d "$CLAUDE_DIR" ] && [ "$SCRIPT_DIR" != "$CLAUDE_DIR" ]; then
     mkdir -p "$BACKUP_DIR"
-    for f in CLAUDE.md AGENTS.md settings.json settings.local.json .mcp.json .omc-config.json statusline.sh; do
+    for f in CLAUDE.md AGENTS.md settings.json settings.local.json statusline.sh; do
         [ -f "$CLAUDE_DIR/$f" ] && cp "$CLAUDE_DIR/$f" "$BACKUP_DIR/" && echo "  백업: $f"
     done
     [ -d "$CLAUDE_DIR/rules" ] && cp -r "$CLAUDE_DIR/rules" "$BACKUP_DIR/rules" && echo "  백업: rules/"
     [ -d "$CLAUDE_DIR/scripts" ] && cp -r "$CLAUDE_DIR/scripts" "$BACKUP_DIR/scripts" && echo "  백업: scripts/"
-    echo "  → 백업 위치: $BACKUP_DIR"
+    echo "  → $BACKUP_DIR"
 elif [ ! -d "$CLAUDE_DIR" ]; then
     mkdir -p "$CLAUDE_DIR"
     echo "  새로 생성: $CLAUDE_DIR"
@@ -88,87 +73,65 @@ else
 fi
 echo ""
 
-# ── Step 2: Core config files ──
-echo "[2/7] 코어 설정 파일 복사..."
-for f in CLAUDE.md AGENTS.md settings.json settings.local.json .mcp.json .omc-config.json statusline.sh; do
+# ── Step 2: Config 복사 ──
+echo "[2/6] 설정 파일 복사..."
+for f in CLAUDE.md AGENTS.md settings.json settings.local.json statusline.sh; do
     if [ -f "$SCRIPT_DIR/$f" ]; then
-        if [ "$SCRIPT_DIR" != "$CLAUDE_DIR" ]; then
-            cp "$SCRIPT_DIR/$f" "$CLAUDE_DIR/$f"
-        fi
+        [ "$SCRIPT_DIR" != "$CLAUDE_DIR" ] && cp "$SCRIPT_DIR/$f" "$CLAUDE_DIR/$f"
         echo "  ✓ $f"
     fi
 done
 chmod +x "$CLAUDE_DIR/statusline.sh"
 echo ""
 
-# ── Step 3: Rules ──
-echo "[3/7] Rules 설치..."
-mkdir -p "$CLAUDE_DIR/rules/common" "$CLAUDE_DIR/rules/typescript" "$CLAUDE_DIR/rules/web"
+# ── Step 3: Rules + Scripts ──
+echo "[3/6] Rules & Scripts 설치..."
+mkdir -p "$CLAUDE_DIR/rules/common" "$CLAUDE_DIR/scripts"
 if [ "$SCRIPT_DIR" != "$CLAUDE_DIR" ]; then
     cp "$SCRIPT_DIR/rules/"*.md "$CLAUDE_DIR/rules/" 2>/dev/null || true
     cp "$SCRIPT_DIR/rules/common/"*.md "$CLAUDE_DIR/rules/common/" 2>/dev/null || true
-    cp "$SCRIPT_DIR/rules/typescript/"*.md "$CLAUDE_DIR/rules/typescript/" 2>/dev/null || true
-    cp "$SCRIPT_DIR/rules/web/"*.md "$CLAUDE_DIR/rules/web/" 2>/dev/null || true
-fi
-RULE_COUNT=$(find "$CLAUDE_DIR/rules" -name '*.md' | wc -l | tr -d ' ')
-echo "  ✓ ${RULE_COUNT}개 rules 파일"
-echo ""
-
-# ── Step 4: Scripts ──
-echo "[4/7] Scripts 설치..."
-mkdir -p "$CLAUDE_DIR/scripts"
-if [ "$SCRIPT_DIR" != "$CLAUDE_DIR" ]; then
     cp "$SCRIPT_DIR/scripts/self-verify-gate.sh" "$CLAUDE_DIR/scripts/" 2>/dev/null || true
 fi
 chmod +x "$CLAUDE_DIR/scripts/self-verify-gate.sh" 2>/dev/null || true
-echo "  ✓ self-verify-gate.sh (SVG agent 위임 hook)"
+RULE_COUNT=$(find "$CLAUDE_DIR/rules" -name '*.md' | wc -l | tr -d ' ')
+echo "  ✓ rules ${RULE_COUNT}개, scripts/self-verify-gate.sh"
 echo ""
 
-# ── Step 5: Plugins ──
-echo "[5/7] Plugins 설치..."
+# ── Step 4: Plugins ──
+echo "[4/6] Plugins 설치..."
 
 install_plugin() {
-    local name="$1"
-    local display="$2"
+    local name="$1" display="$2"
     if claude plugin list 2>/dev/null | grep -q "$name"; then
         echo "  ✓ $display (이미 설치됨)"
     else
         echo "  설치 중: $display..."
-        CLAUDECODE="" claude plugin install "$name" 2>/dev/null && echo "  ✓ $display" || echo "  ⚠ $display 수동 설치 필요: claude plugin install $name"
+        CLAUDECODE="" claude plugin install "$name" 2>/dev/null \
+            && echo "  ✓ $display" \
+            || echo "  ⚠ $display 수동 설치 필요: claude plugin install $name"
     fi
 }
 
+# 필수
 install_plugin "oh-my-claudecode" "OMC (oh-my-claudecode)"
-install_plugin "typescript-lsp" "TypeScript LSP"
 install_plugin "pyright-lsp" "Pyright LSP (Python)"
 echo ""
 
-# ── Step 6: Permissions 확인 ──
-echo "[6/7] 실행 권한 확인..."
+# ── Step 5: 실행 권한 ──
+echo "[5/6] 실행 권한 확인..."
 chmod +x "$CLAUDE_DIR/statusline.sh" 2>/dev/null && echo "  ✓ statusline.sh"
 chmod +x "$CLAUDE_DIR/scripts/self-verify-gate.sh" 2>/dev/null && echo "  ✓ self-verify-gate.sh"
 echo ""
 
-# ── Step 7: Verify ──
-echo "[7/7] 설치 검증..."
+# ── Step 6: 검증 ──
+echo "[6/6] 설치 검증..."
 ERRORS=0
 
 check_file() {
-    if [ -f "$1" ]; then
-        echo "  ✓ $2"
-    else
-        echo "  ✗ $2 — 누락!"
-        ERRORS=$((ERRORS + 1))
-    fi
+    [ -f "$1" ] && echo "  ✓ $2" || { echo "  ✗ $2 — 누락!"; ERRORS=$((ERRORS + 1)); }
 }
-
 check_cmd() {
-    if command -v "$1" &>/dev/null; then
-        echo "  ✓ $2"
-    else
-        echo "  ✗ $2 — 미설치!"
-        ERRORS=$((ERRORS + 1))
-    fi
+    command -v "$1" &>/dev/null && echo "  ✓ $2" || { echo "  ✗ $2 — 미설치!"; ERRORS=$((ERRORS + 1)); }
 }
 
 echo "  [파일]"
@@ -181,6 +144,7 @@ check_file "$CLAUDE_DIR/scripts/self-verify-gate.sh" "scripts/self-verify-gate.s
 check_file "$CLAUDE_DIR/rules/self-verification-gate.md" "rules/SVG"
 check_file "$CLAUDE_DIR/rules/four-lenses-design-review.md" "rules/4-Lenses"
 check_file "$CLAUDE_DIR/rules/code-development-principles.md" "rules/개발원칙"
+check_file "$CLAUDE_DIR/rules/common/code-review.md" "rules/코드리뷰"
 
 echo "  [도구]"
 check_cmd "node" "Node.js"
@@ -193,16 +157,11 @@ if [ "$ERRORS" -eq 0 ]; then
     echo "=== 설치 완료! ==="
     echo ""
     echo "다음 단계:"
-    echo "  1. claude 실행 후 Anthropic 계정 인증"
+    echo "  1. claude 실행 후 인증"
     echo "  2. 'setup omc' 입력하여 OMC 초기화"
-    echo "  3. 프로젝트별 .claude/rules/ 추가 설정 (선택)"
-    echo "  4. MCP 서버 필요시 ~/.claude/.mcp.json 에 추가"
-    echo ""
-    if [ -d "$BACKUP_DIR" ] 2>/dev/null; then
-        echo "백업 위치: $BACKUP_DIR"
-    fi
+    echo "  3. 프로젝트별 .claude/rules/ 추가 (선택)"
 else
     echo "=== 설치 불완전 ($ERRORS건 누락) ==="
-    echo "위 ✗ 항목을 확인 후 재실행하세요."
+    echo "위 ✗ 항목 확인 후 재실행하세요."
     exit 1
 fi

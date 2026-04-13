@@ -79,7 +79,6 @@
   },
   "enabledPlugins": {
     "oh-my-claudecode@omc": true,
-    "typescript-lsp@claude-plugins-official": true,
     "pyright-lsp@claude-plugins-official": true
   },
   "skipDangerousModePermissionPrompt": true
