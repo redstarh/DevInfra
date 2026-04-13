@@ -1,166 +1,41 @@
-# Everything Claude Code (ECC) — Agent Instructions
+# Agent Instructions
 
-This is a **production-ready AI coding plugin** providing 47 specialized agents, 181 skills, 79 commands, and automated hook workflows for software development.
+OMC(oh-my-claudecode) 기반 에이전트 오케스트레이션 환경.
+에이전트 카탈로그, 스킬, 팀 파이프라인 상세는 `/oh-my-claudecode:omc-reference` 참조.
 
-**Version:** 1.10.0
-
-## Core Principles
-
-1. **Agent-First** — Delegate to specialized agents for domain tasks
-2. **Test-Driven** — Write tests before implementation, 80%+ coverage required
-3. **Security-First** — Never compromise on security; validate all inputs
-4. **Immutability** — Always create new objects, never mutate existing ones
-5. **Plan Before Execute** — Plan complex features before writing code
-
-## Available Agents
+## Agent Routing
 
 | Agent | Purpose | When to Use |
 |-------|---------|-------------|
-| planner | Implementation planning | Complex features, refactoring |
-| architect | System design and scalability | Architectural decisions |
-| tdd-guide | Test-driven development | New features, bug fixes |
-| code-reviewer | Code quality and maintainability | After writing/modifying code |
-| security-reviewer | Vulnerability detection | Before commits, sensitive code |
-| build-error-resolver | Fix build/type errors | When build fails |
-| e2e-runner | End-to-end Playwright testing | Critical user flows |
-| refactor-cleaner | Dead code cleanup | Code maintenance |
-| doc-updater | Documentation and codemaps | Updating docs |
-| cpp-reviewer | C++ code review | C++ projects |
-| cpp-build-resolver | C++ build errors | C++ build failures |
-| docs-lookup | Documentation lookup via Context7 | API/docs questions |
-| go-reviewer | Go code review | Go projects |
-| go-build-resolver | Go build errors | Go build failures |
-| kotlin-reviewer | Kotlin code review | Kotlin/Android/KMP projects |
-| kotlin-build-resolver | Kotlin/Gradle build errors | Kotlin build failures |
-| database-reviewer | PostgreSQL/Supabase specialist | Schema design, query optimization |
-| python-reviewer | Python code review | Python projects |
-| java-reviewer | Java and Spring Boot code review | Java/Spring Boot projects |
-| java-build-resolver | Java/Maven/Gradle build errors | Java build failures |
-| loop-operator | Autonomous loop execution | Run loops safely, monitor stalls, intervene |
-| harness-optimizer | Harness config tuning | Reliability, cost, throughput |
-| rust-reviewer | Rust code review | Rust projects |
-| rust-build-resolver | Rust build errors | Rust build failures |
-| pytorch-build-resolver | PyTorch runtime/CUDA/training errors | PyTorch build/training failures |
-| typescript-reviewer | TypeScript/JavaScript code review | TypeScript/JavaScript projects |
+| explore | Codebase search | 파일/패턴 탐색 |
+| planner | Implementation planning | 복잡한 기능, 리팩토링 계획 |
+| architect | System design | 아키텍처 결정, 구조 검토 |
+| executor | Task execution | 코드 구현 |
+| code-reviewer | Code quality | 코드 작성/수정 후 리뷰 |
+| security-reviewer | Vulnerability detection | 보안 민감 코드 |
+| critic | Analysis/design verification | 분석/설계 결론 검증 |
+| verifier | Completion verification | 작업 완료 확인 |
+| test-engineer | Test strategy | TDD, 테스트 작성 |
+| debugger | Root-cause analysis | 버그 추적, 디버깅 |
+| writer | Documentation | README, API docs |
+| designer | UI/UX | 프론트엔드 인터페이스 |
 
-## Agent Orchestration
+## Orchestration
 
-Use agents proactively without user prompt:
-- Complex feature requests → **planner**
-- Code just written/modified → **code-reviewer**
-- Bug fix or new feature → **tdd-guide**
-- Architectural decision → **architect**
-- Security-sensitive code → **security-reviewer**
-- Autonomous loops / loop monitoring → **loop-operator**
-- Harness config reliability and cost → **harness-optimizer**
-
-Use parallel execution for independent operations — launch multiple agents simultaneously.
-
-## Security Guidelines
-
-**Before ANY commit:**
-- No hardcoded secrets (API keys, passwords, tokens)
-- All user inputs validated
-- SQL injection prevention (parameterized queries)
-- XSS prevention (sanitized HTML)
-- CSRF protection enabled
-- Authentication/authorization verified
-- Rate limiting on all endpoints
-- Error messages don't leak sensitive data
-
-**Secret management:** NEVER hardcode secrets. Use environment variables or a secret manager. Validate required secrets at startup. Rotate any exposed secrets immediately.
-
-**If security issue found:** STOP → use security-reviewer agent → fix CRITICAL issues → rotate exposed secrets → review codebase for similar issues.
+- 복잡한 요청 → **planner** → **executor**
+- 코드 작성 후 → **code-reviewer**
+- 분석/설계 결론 → **critic** (SVG gate)
+- 보안 민감 코드 → **security-reviewer**
+- 독립 작업은 병렬 실행
 
 ## Coding Style
 
-**Immutability (CRITICAL):** Always create new objects, never mutate. Return new copies with changes applied.
+- Immutability: 새 객체 생성, 기존 객체 변경 금지
+- 파일: 200-400줄 권장, 800줄 상한
+- 함수: 50줄 이하
+- 에러 핸들링: 모든 레벨에서 처리, silent swallow 금지
+- 입력 검증: 시스템 경계에서 검증
 
-**File organization:** Many small files over few large ones. 200-400 lines typical, 800 max. Organize by feature/domain, not by type. High cohesion, low coupling.
+## Git
 
-**Error handling:** Handle errors at every level. Provide user-friendly messages in UI code. Log detailed context server-side. Never silently swallow errors.
-
-**Input validation:** Validate all user input at system boundaries. Use schema-based validation. Fail fast with clear messages. Never trust external data.
-
-**Code quality checklist:**
-- Functions small (<50 lines), files focused (<800 lines)
-- No deep nesting (>4 levels)
-- Proper error handling, no hardcoded values
-- Readable, well-named identifiers
-
-## Testing Requirements
-
-**Minimum coverage: 80%**
-
-Test types (all required):
-1. **Unit tests** — Individual functions, utilities, components
-2. **Integration tests** — API endpoints, database operations
-3. **E2E tests** — Critical user flows
-
-**TDD workflow (mandatory):**
-1. Write test first (RED) — test should FAIL
-2. Write minimal implementation (GREEN) — test should PASS
-3. Refactor (IMPROVE) — verify coverage 80%+
-
-Troubleshoot failures: check test isolation → verify mocks → fix implementation (not tests, unless tests are wrong).
-
-## Development Workflow
-
-1. **Plan** — Use planner agent, identify dependencies and risks, break into phases
-2. **TDD** — Use tdd-guide agent, write tests first, implement, refactor
-3. **Review** — Use code-reviewer agent immediately, address CRITICAL/HIGH issues
-4. **Capture knowledge in the right place**
-   - Personal debugging notes, preferences, and temporary context → auto memory
-   - Team/project knowledge (architecture decisions, API changes, runbooks) → the project's existing docs structure
-   - If the current task already produces the relevant docs or code comments, do not duplicate the same information elsewhere
-   - If there is no obvious project doc location, ask before creating a new top-level file
-5. **Commit** — Conventional commits format, comprehensive PR summaries
-
-## Workflow Surface Policy
-
-- `skills/` is the canonical workflow surface.
-- New workflow contributions should land in `skills/` first.
-- `commands/` is a legacy slash-entry compatibility surface and should only be added or updated when a shim is still required for migration or cross-harness parity.
-
-## Git Workflow
-
-**Commit format:** `<type>: <description>` — Types: feat, fix, refactor, docs, test, chore, perf, ci
-
-**PR workflow:** Analyze full commit history → draft comprehensive summary → include test plan → push with `-u` flag.
-
-## Architecture Patterns
-
-**API response format:** Consistent envelope with success indicator, data payload, error message, and pagination metadata.
-
-**Repository pattern:** Encapsulate data access behind standard interface (findAll, findById, create, update, delete). Business logic depends on abstract interface, not storage mechanism.
-
-**Skeleton projects:** Search for battle-tested templates, evaluate with parallel agents (security, extensibility, relevance), clone best match, iterate within proven structure.
-
-## Performance
-
-**Context management:** Avoid last 20% of context window for large refactoring and multi-file features. Lower-sensitivity tasks (single edits, docs, simple fixes) tolerate higher utilization.
-
-**Build troubleshooting:** Use build-error-resolver agent → analyze errors → fix incrementally → verify after each fix.
-
-## Project Structure
-
-```
-agents/          — 47 specialized subagents
-skills/          — 181 workflow skills and domain knowledge
-commands/        — 79 slash commands
-hooks/           — Trigger-based automations
-rules/           — Always-follow guidelines (common + per-language)
-scripts/         — Cross-platform Node.js utilities
-mcp-configs/     — 14 MCP server configurations
-tests/           — Test suite
-```
-
-`commands/` remains in the repo for compatibility, but the long-term direction is skills-first.
-
-## Success Metrics
-
-- All tests pass with 80%+ coverage
-- No security vulnerabilities
-- Code is readable and maintainable
-- Performance is acceptable
-- User requirements are met
+Conventional commits: `feat:`, `fix:`, `refactor:`, `docs:`, `test:`, `chore:`, `perf:`, `ci:`
