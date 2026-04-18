@@ -114,19 +114,21 @@ ralph 연동: 트랙 자동 판별 → 해당 단계만 반복 (A=2~7, B=2~7, C=
 > Agent 카탈로그와 Skill 목록은 CLAUDE.md `<agent_catalog>`, `<skills>` 참조.
 > 아래는 **단계별 매핑**만 정의한다.
 
-| 단계 | SubAgent | Skill | 병렬 |
-|------|----------|-------|------|
-| 0 Specify | analyst | ralplan / omc-plan | - |
-| 1 분석 | explore → analyst | analyze / sciomc | O |
-| 2 구조파악 | explore → architect | - | O |
-| 3 상세설계 | planner → architect | ralplan --deliberate (고위험) | - |
-| 4 설계검토 | critic → architect | - | - |
-| 5 개발 | executor / deep-executor, build-fixer | ultrawork / build-fix | O |
-| 6 테스트 | test-engineer | tdd / generate-tests | O |
-| 7 테스트수행 | verifier, debugger(실패시) | ultraqa | - |
-| 9 완료 | code-reviewer → verifier → git-master | code-review / security-review | - |
+| 단계 | SubAgent | Skill | LSP | 병렬 |
+|------|----------|-------|-----|------|
+| 0 Specify | analyst | ralplan / omc-plan | - | - |
+| 1 분석 | explore → analyst | analyze / sciomc | `document_symbols`, `find_references` | O |
+| 2 구조파악 | explore → architect | - | `document_symbols`, `workspace_symbols` | O |
+| 3 상세설계 | planner → architect | ralplan --deliberate (고위험) | `find_references` (영향도) | - |
+| 4 설계검토 | critic → architect | - | `find_references` (교차검증) | - |
+| 5 개발 | executor / deep-executor, build-fixer | ultrawork / build-fix | `goto_definition`, `diagnostics` | O |
+| 6 테스트 | test-engineer | tdd / generate-tests | `document_symbols` | O |
+| 7 테스트수행 | verifier, debugger(실패시) | ultraqa | `diagnostics` | - |
+| 9 완료 | code-reviewer → verifier → git-master | code-review / security-review | `diagnostics` (self-check) | - |
 
 **병렬 규칙**: 독립 파일/모듈은 병렬 실행. 이전 단계 결과 의존 시 순차.
+
+**LSP 우선 원칙**: Python 심볼/참조/정의 추적은 LSP 도구 우선. Grep은 자유 텍스트(로그/주석/WAL)용. 환경 요건: `ty` (Astral, `pipx install ty`). 상세: 각 프로젝트 `.claude/rules/` 참조 (예: `StockAgent/.claude/rules/sa-coding.md §10`).
 
 ---
 
