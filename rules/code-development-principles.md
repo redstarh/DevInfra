@@ -128,7 +128,24 @@ ralph 연동: 트랙 자동 판별 → 해당 단계만 반복 (A=2~7, B=2~7, C=
 
 **병렬 규칙**: 독립 파일/모듈은 병렬 실행. 이전 단계 결과 의존 시 순차.
 
-**LSP 우선 원칙**: Python 심볼/참조/정의 추적은 LSP 도구 우선. Grep은 자유 텍스트(로그/주석/WAL)용. 환경 요건: `ty` (Astral, `pipx install ty`). 상세: 각 프로젝트 `.claude/rules/` 참조 (예: `StockAgent/.claude/rules/sa-coding.md §10`).
+**LSP 우선 원칙** (SoT — 전역 기본):
+
+Python 심볼/참조/정의 추적은 LSP(`mcp__plugin_oh-my-claudecode_t__lsp_*`) 우선. Grep은 자유 텍스트(로그/주석/WAL/JSON) 전용.
+
+| 목적 | 1차 도구 | Gate 증거로 허용 |
+|------|---------|:----------------:|
+| 함수/클래스 호출처 (영향도) | `lsp_find_references` | D2, 4L L4 |
+| 함수/메서드 정의 | `lsp_goto_definition` | V1 |
+| 파일 구조 (메서드 트리) | `lsp_document_symbols` | - |
+| 타입 시그니처 / 계약 확인 | `lsp_hover` | 4L L1 |
+| 타입 오류/경고 self-check | `lsp_diagnostics` | V3, V5, T1 (ruff와 병기) |
+| 로그/주석/WAL/커밋 | Grep, `git log` | LSP 대상 아님 |
+
+**Fallback**: LSP 서버 미기동/타임아웃 시 Grep 2차. `ty` 알파 단계의 엣지케이스(동적 속성, 데코레이터 체인)는 Grep으로 교차 검증 권장.
+
+**범위**: Python 전체 프로젝트. TS/JS는 프로젝트별 `.claude/rules/`에서 별도 정의 (기본값 미정).
+
+**환경 요건**: `ty` (Astral, `pipx install ty`). 프로젝트 특수성(언어 혼용/경로/예외)은 각 프로젝트 `.claude/rules/` 참조 (예: `StockAgent/.claude/rules/sa-coding.md §10`).
 
 ---
 

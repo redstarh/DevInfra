@@ -59,7 +59,7 @@
 | # | 항목 | 설명 | 증거 형식 |
 |---|------|------|----------|
 | D1 | 분석 근거 | 검증된 분석에 기반 | "ANALYSIS GATE 통과한 결론 참조" |
-| D2 | 영향 범위 | 변경 파일 + 의존성 | Grep 결과 |
+| D2 | 영향 범위 | 변경 파일 + 의존성 | `lsp_find_references` 결과 (Python), Grep (자유 텍스트) |
 | D3 | 4 Lenses | `four-lenses-design-review.md` 전체 적용 | 각 관점별 1줄 이상 |
 | D4 | 기존 충돌 | 현재 코드/설정과 충돌 여부 | Read로 확인한 현재 상태 |
 | D5 | 설계 약점 | 빈틈 1개+ 식별 | "이 설계의 약점: ..." |
@@ -70,15 +70,15 @@
 |---|------|------|----------|
 | V1 | 설계 기반 | 확정 설계에 따른 구현 | 설계서 참조 또는 사용자 지시 |
 | V2 | 방어 로직 | 오류/예외 방어 필수 (null/empty/exception) | 해당 코드 라인 |
-| V3 | 컨벤션 | 매직넘버, safe_parse, naive dt | ruff check 결과 |
+| V3 | 컨벤션 | 매직넘버, safe_parse, naive dt | ruff check 결과 + `lsp_diagnostics` 출력 |
 | V4 | 의존성 | import, 파라미터 주입 | ruff I001 결과 |
-| V5 | lint | ruff check + format 통과 | 명령 출력 |
+| V5 | lint | ruff check + format 통과 + 타입 오류 0 | 명령 출력 + `lsp_diagnostics` 0건 |
 
 ### TEST (테스트 작성/수행 시)
 
 | # | 항목 | 설명 | 증거 형식 |
 |---|------|------|----------|
-| T1 | 커버리지 | 변경 소스 전체 커버 단위+통합 테스트 필수 | 테스트 파일:함수 목록 |
+| T1 | 커버리지 | 변경 소스 전체 커버 단위+통합 테스트 필수 | 테스트 파일:함수 목록 + `lsp_document_symbols` 대조 |
 | T2 | 엣지케이스 | 경계값, null, empty 필수 포함 | 테스트 케이스 이름 |
 | T3 | 실패 시나리오 | 예외/장애 대응 케이스 필수 포함 | 테스트 케이스 이름 |
 | T4 | 무회귀 | 기존 테스트 passed 수 유지 또는 증가 필수. 실패 시 단독 실행으로 flaky 여부 구분 | pytest 출력 (before/after) |
