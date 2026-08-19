@@ -28,7 +28,7 @@
                              → NO  → C. 문서 트랙
 ```
 
-ralph 연동: 트랙 자동 판별 → 해당 단계만 반복 (A=2~7, B=2~7, C=5만, D=1만)
+반복 실행 시: 트랙 판별 후 해당 단계만 반복 (A=2~7, B=2~7, C=5만, D=1만)
 
 ### 0단계: Specify + Clarify
 
@@ -111,41 +111,45 @@ ralph 연동: 트랙 자동 판별 → 해당 단계만 반복 (A=2~7, B=2~7, C=
 
 ## §0-2. 단계별 SubAgent/Skill 가이드
 
-> Agent 카탈로그와 Skill 목록은 CLAUDE.md `<agent_catalog>`, `<skills>` 참조.
-> 아래는 **단계별 매핑**만 정의한다.
+> Agent 매핑 상세는 `~/.claude/AGENTS.md`, Skill 목록은 CLAUDE.md `<skills>` 참조.
+> 아래는 **단계별 매핑**만 정의한다. 역할명(critic/reviewer 등)은 `general-purpose` agent에 부여하는 프롬프트 역할이다.
 
-| 단계 | SubAgent | Skill | LSP | 병렬 |
-|------|----------|-------|-----|------|
-| 0 Specify | analyst | ralplan / omc-plan | - | - |
-| 1 분석 | explore → analyst | analyze / sciomc | `document_symbols`, `find_references` | O |
-| 2 구조파악 | explore → architect | - | `document_symbols`, `workspace_symbols` | O |
-| 3 상세설계 | planner → architect | ralplan --deliberate (고위험) | `find_references` (영향도) | - |
-| 4 설계검토 | critic → architect | - | `find_references` (교차검증) | - |
-| 5 개발 | executor / deep-executor, build-fixer | ultrawork / build-fix | `goto_definition`, `diagnostics` | O |
-| 6 테스트 | test-engineer | tdd / generate-tests | `document_symbols` | O |
-| 7 테스트수행 | verifier, debugger(실패시) | ultraqa | `diagnostics` | - |
-| 9 완료 | code-reviewer → verifier → git-master | code-review / security-review | `diagnostics` (self-check) | - |
+| 단계 | SubAgent (역할) | 모델 | Skill | LSP | 병렬 |
+|------|----------------|------|-------|-----|------|
+| 0 Specify | 요구분석 | opus | - | - | - |
+| 1 분석 | `Explore` → 분석 | opus | - | `documentSymbol`, `findReferences` | O |
+| 2 구조파악 | `Explore` → `Plan` | - | - | `documentSymbol`, `workspaceSymbol` | O |
+| 3 상세설계 | `Plan` | - | - | `findReferences` (영향도) | - |
+| 4 설계검토 | critic → `Plan` | opus | - | `findReferences` (교차검증) | - |
+| 5 개발 | 구현 | sonnet/opus | - | `goToDefinition`, `ty check` | O |
+| 6 테스트 | 테스트 작성 | sonnet | - | `documentSymbol` | O |
+| 7 테스트수행 | verifier, 디버깅(실패시) | sonnet/opus | - | `ty check` | - |
+| 9 완료 | code-reviewer → verifier → 커밋 | opus | `/simplify`, `/security-review` | `ty check` (self-check) | - |
 
 **병렬 규칙**: 독립 파일/모듈은 병렬 실행. 이전 단계 결과 의존 시 순차.
 
 **LSP 우선 원칙** (SoT — 전역 기본):
 
-Python 심볼/참조/정의 추적은 LSP(`mcp__plugin_oh-my-claudecode_t__lsp_*`) 우선. Grep은 자유 텍스트(로그/주석/WAL/JSON) 전용.
+Python 심볼/참조/정의 추적은 네이티브 `LSP` 툴 우선(서버: `pyright-lsp` 플러그인). Grep은 자유 텍스트(로그/주석/WAL/JSON) 전용.
 
 | 목적 | 1차 도구 | Gate 증거로 허용 |
 |------|---------|:----------------:|
-| 함수/클래스 호출처 (영향도) | `lsp_find_references` | D2, 4L L4 |
-| 함수/메서드 정의 | `lsp_goto_definition` | V1 |
-| 파일 구조 (메서드 트리) | `lsp_document_symbols` | - |
-| 타입 시그니처 / 계약 확인 | `lsp_hover` | 4L L1 |
-| 타입 오류/경고 self-check | `lsp_diagnostics` | V3, V5, T1 (ruff와 병기) |
+| 함수/클래스 호출처 (영향도) | `LSP(findReferences)` | D2, 4L L4 |
+| 함수/메서드 정의 | `LSP(goToDefinition)` | V1 |
+| 파일 구조 (메서드 트리) | `LSP(documentSymbol)` | - |
+| 워크스페이스 심볼 검색 | `LSP(workspaceSymbol)` + `query` | - |
+| 타입 시그니처 / 계약 확인 | `LSP(hover)` | 4L L1 |
+| 호출 계층 추적 | `LSP(incomingCalls/outgoingCalls)` | 4L L4 |
+| 타입 오류/경고 self-check | `ty check` (또는 `pyright`) | V3, V5, T1 (ruff와 병기) |
 | 로그/주석/WAL/커밋 | Grep, `git log` | LSP 대상 아님 |
+
+⚠️ 네이티브 `LSP` 툴에는 **diagnostics 연산이 없다** → 타입/린트 진단은 CLI(`ty check`, `.venv/bin/ruff check`)로 수집한다.
 
 **Fallback**: LSP 서버 미기동/타임아웃 시 Grep 2차. `ty` 알파 단계의 엣지케이스(동적 속성, 데코레이터 체인)는 Grep으로 교차 검증 권장.
 
 **범위**: Python 전체 프로젝트. TS/JS는 프로젝트별 `.claude/rules/`에서 별도 정의 (기본값 미정).
 
-**환경 요건**: `ty` (Astral, `pipx install ty`). 프로젝트 특수성(언어 혼용/경로/예외)은 각 프로젝트 `.claude/rules/` 참조 (예: `StockAgent/.claude/rules/sa-coding.md §10`).
+**환경 요건**: `ty` (Astral, `pipx install ty`), `pyright-lsp` 플러그인(LSP 서버). 프로젝트 특수성(언어 혼용/경로/예외)은 각 프로젝트 `.claude/rules/` 참조 (예: `StockAgent/.claude/rules/sa-coding.md §10`).
 
 ---
 
@@ -160,4 +164,25 @@ Python 심볼/참조/정의 추적은 LSP(`mcp__plugin_oh-my-claudecode_t__lsp_*
 
 ---
 
-_최종 수정: 2026-04-13 — 중복 제거 (SubAgent/Skill은 CLAUDE.md 참조), 프로젝트 전용 규칙은 각 프로젝트 .claude/rules/ 분리_
+## §2. GitHub Actions `[skip ci]` 사용 규칙
+
+> 2026-05-01: Free plan Private repo 월 2000분 한도 대응. SoP: `~/AgentDev/docs/ops/github-ci-cost-reduction-sop.md`
+
+커밋 메시지에 `[skip ci]` / `[ci skip]` / `[no ci]` 포함 시 GitHub Actions workflow **전체 스킵**됨 (GitHub 공식 지원).
+
+### 허용 (의도적 스킵)
+- `docs:` 접두어 커밋 (docs-only 변경)
+- `chore(docs):`, `chore(rules):` 접두어
+- `.claude/**`, `data/reports/**`, `docs/analysis/**`, `docs/design/**` 전용 커밋
+
+### 절대 금지
+- **`feat:` / `fix:` / `perf:` / `refactor:` / `test:`** 접두어 커밋에는 `[skip ci]` 사용 **금지**
+- `config.py` 변경 포함 커밋 (Strategy-Config sync check 우회 위험)
+
+### 기본 동작
+`.github/workflows/test.yml`의 `paths-ignore`에 명시된 경로(`docs/**`, `.claude/**` 등) 커밋은 **자동 스킵**되므로 `[skip ci]` 태그 **불필요**. 태그는 paths-ignore 범위 외 docs-only 커밋에만 사용.
+
+---
+
+_최종 수정: 2026-05-01 — §2 GitHub Actions [skip ci] 규칙 추가 (CI 비용 절감 SoP 연동)_
+_이전: 2026-04-13 — 중복 제거 (SubAgent/Skill은 CLAUDE.md 참조), 프로젝트 전용 규칙은 각 프로젝트 .claude/rules/ 분리_

@@ -16,7 +16,7 @@ set -euo pipefail
 
 INPUT=$(cat)
 
-# 프롬프트 추출 (keyword-detector.mjs와 동일한 JSON 구조 지원)
+# 프롬프트 추출 (UserPromptSubmit hook의 JSON 구조 변형 모두 지원)
 PROMPT=$(echo "$INPUT" | jq -r '
   if .prompt then .prompt
   elif .message.content then .message.content
@@ -35,9 +35,10 @@ fi
 # 2026-04-09: 기존 ~650토큰/프롬프트 → ~30토큰/프롬프트로 최적화
 read -r -d '' CHECKLIST << 'GATE' || true
 <svg>
-분석/조사 결론 → critic(opus) 위임 후 답변. 설계/방안 → critic(opus) 위임 후 답변.
-코드 완료 → code-reviewer(opus). 실행/확인/설정/잡담 → 바로 답변.
-자기검증 테이블 금지. 기준: rules/self-verification-gate.md
+턴마다 반드시 1문장 이상 텍스트 출력 — tool만 쓰고 end_turn 금지.
+분석/조사/설계 결론은 critic 역할 agent(general-purpose, opus)로 독립 검증 후 제시. 코드 완료는 code-reviewer 역할(opus).
+실행/확인/설정/잡담/진행안내는 바로 답변. 검증 테이블 수기 작성 금지 — agent에 위임.
+기준: rules/self-verification-gate.md
 </svg>
 GATE
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 # Claude Code 설정 일괄 설치 스크립트
-# 2026-04-13 기준 — ECC 잔재 제거, OMC 전용
+# 2026-08-19 기준 — OMC(oh-my-claudecode) 제거, Claude Code 네이티브 전용
 #
 # 사용법:
 #   gh repo clone reddotkim/claude-config ~/.claude
@@ -11,9 +11,9 @@
 #   /tmp/claude-config/install.sh
 #
 # 포함 항목:
-#   - CLAUDE.md (OMC 오케스트레이션 + 개인 규칙)
-#   - AGENTS.md (OMC 에이전트 라우팅)
-#   - settings.json (hooks 6개, plugins 2개, statusLine)
+#   - CLAUDE.md (네이티브 오케스트레이션 + 개인 규칙)
+#   - AGENTS.md (네이티브 에이전트 라우팅)
+#   - settings.json (hooks, plugins 1개(pyright-lsp), statusLine, 모델 env)
 #   - settings.local.json (permissions, env)
 #   - rules/ 4개 (SVG, 4-Lenses, 개발 원칙, 코드 리뷰)
 #   - scripts/self-verify-gate.sh (SVG hook)
@@ -113,7 +113,6 @@ install_plugin() {
 }
 
 # 필수
-install_plugin "oh-my-claudecode" "OMC (oh-my-claudecode)"
 install_plugin "pyright-lsp" "Pyright LSP (Python)"
 echo ""
 
@@ -158,8 +157,7 @@ if [ "$ERRORS" -eq 0 ]; then
     echo ""
     echo "다음 단계:"
     echo "  1. claude 실행 후 인증"
-    echo "  2. 'setup omc' 입력하여 OMC 초기화"
-    echo "  3. 프로젝트별 .claude/rules/ 추가 (선택)"
+    echo "  2. 프로젝트별 .claude/rules/ 추가 (선택)"
 else
     echo "=== 설치 불완전 ($ERRORS건 누락) ==="
     echo "위 ✗ 항목 확인 후 재실행하세요."

@@ -9,18 +9,19 @@
 
 > **원칙: author ≠ reviewer.** 동일 컨텍스트에서 작성과 검증을 동시에 하지 않는다.
 
-| 대상 | 검증 Agent | 모델 | 기준 |
-|------|-----------|------|------|
-| 분석/조사 결론 | `critic` | opus | A1~A5 |
-| 설계/방안 제시 | `critic` | opus | D1~D5 + 4 Lenses |
-| 코드 구현 | `code-reviewer` | opus | V1~V5 |
-| 테스트 | `verifier` | sonnet | T1~T5 |
+| 대상 | 검증 Agent | 모델 | 역할 프롬프트 | 기준 |
+|------|-----------|------|--------------|------|
+| 분석/조사 결론 | `general-purpose` | opus | critic (반증 시도) | A1~A5 |
+| 설계/방안 제시 | `general-purpose` | opus | critic (반증 시도) | D1~D5 + 4 Lenses |
+| 코드 구현 | `general-purpose` | opus | code-reviewer (`ReportFindings`) | V1~V5 |
+| 테스트 | `general-purpose` | sonnet | verifier (증거 수집) | T1~T5 |
+| 보안 민감 코드 | `/security-review` skill | — | — | `common/code-review.md` |
 
 **위임 규칙:**
-- 분석/설계 결론을 사용자에게 전달하기 **전** 반드시 critic agent 호출
-- critic에게 해당 Gate Checklist 항목을 전달하여 독립 검증
-- 코드 구현 완료 시 code-reviewer agent 호출
-- critic/reviewer 판정에 따라 행동 (아래 Critic Gate 참조)
+- 분석/설계 결론을 사용자에게 전달하기 **전** 반드시 critic 역할 agent 호출
+- 호출 시 해당 Gate Checklist 항목을 프롬프트에 명시하여 독립 검증시킴
+- 코드 구현 완료 시 code-reviewer 역할 agent 호출
+- 판정에 따라 행동 (아래 Critic Gate 참조)
 
 **금지:** 메인 응답에서 검증 테이블(항목|판정|증거)을 직접 생성하지 않는다.
 
@@ -59,7 +60,7 @@
 | # | 항목 | 설명 | 증거 형식 |
 |---|------|------|----------|
 | D1 | 분석 근거 | 검증된 분석에 기반 | "ANALYSIS GATE 통과한 결론 참조" |
-| D2 | 영향 범위 | 변경 파일 + 의존성 | `lsp_find_references` 결과 (Python), Grep (자유 텍스트) |
+| D2 | 영향 범위 | 변경 파일 + 의존성 | `LSP(findReferences)` 결과 (Python), Grep (자유 텍스트) |
 | D3 | 4 Lenses | `four-lenses-design-review.md` 전체 적용 | 각 관점별 1줄 이상 |
 | D4 | 기존 충돌 | 현재 코드/설정과 충돌 여부 | Read로 확인한 현재 상태 |
 | D5 | 설계 약점 | 빈틈 1개+ 식별 | "이 설계의 약점: ..." |
@@ -70,15 +71,15 @@
 |---|------|------|----------|
 | V1 | 설계 기반 | 확정 설계에 따른 구현 | 설계서 참조 또는 사용자 지시 |
 | V2 | 방어 로직 | 오류/예외 방어 필수 (null/empty/exception) | 해당 코드 라인 |
-| V3 | 컨벤션 | 매직넘버, safe_parse, naive dt | ruff check 결과 + `lsp_diagnostics` 출력 |
+| V3 | 컨벤션 | 매직넘버, safe_parse, naive dt | ruff check 결과 + `ty check` 출력 |
 | V4 | 의존성 | import, 파라미터 주입 | ruff I001 결과 |
-| V5 | lint | ruff check + format 통과 + 타입 오류 0 | 명령 출력 + `lsp_diagnostics` 0건 |
+| V5 | lint | ruff check + format 통과 + 타입 오류 0 | 명령 출력 + `ty check` 0건 |
 
 ### TEST (테스트 작성/수행 시)
 
 | # | 항목 | 설명 | 증거 형식 |
 |---|------|------|----------|
-| T1 | 커버리지 | 변경 소스 전체 커버 단위+통합 테스트 필수 | 테스트 파일:함수 목록 + `lsp_document_symbols` 대조 |
+| T1 | 커버리지 | 변경 소스 전체 커버 단위+통합 테스트 필수 | 테스트 파일:함수 목록 + `LSP(documentSymbol)` 대조 |
 | T2 | 엣지케이스 | 경계값, null, empty 필수 포함 | 테스트 케이스 이름 |
 | T3 | 실패 시나리오 | 예외/장애 대응 케이스 필수 포함 | 테스트 케이스 이름 |
 | T4 | 무회귀 | 기존 테스트 passed 수 유지 또는 증가 필수. 실패 시 단독 실행으로 flaky 여부 구분 | pytest 출력 (before/after) |
@@ -90,13 +91,13 @@
 
 | 질문 유형 | 게이트 | Agent 위임 |
 |----------|--------|-----------|
-| 에러/원인 분석 | ANALYSIS | critic(opus) 필수 |
-| 설계/방안 제시 | DESIGN | critic(opus) 필수 |
-| 코드 구현 | DEVELOPMENT | code-reviewer(opus) 완료 시 |
-| 테스트 | TEST | verifier(sonnet) 완료 시 |
-| 분석+설계 | ANALYSIS+DESIGN | critic(opus) 필수 |
-| 개발+테스트 | DEV+TEST | code-reviewer(opus) + verifier(sonnet) |
-| 기능 설명/비교/동작 확인 | ANALYSIS | 경미하면 N/A, 판단 필요시 critic |
+| 에러/원인 분석 | ANALYSIS | critic 역할(opus) 필수 |
+| 설계/방안 제시 | DESIGN | critic 역할(opus) 필수 |
+| 코드 구현 | DEVELOPMENT | code-reviewer 역할(opus) 완료 시 |
+| 테스트 | TEST | verifier 역할(sonnet) 완료 시 |
+| 분석+설계 | ANALYSIS+DESIGN | critic 역할(opus) 필수 |
+| 개발+테스트 | DEV+TEST | code-reviewer 역할(opus) + verifier 역할(sonnet) |
+| 기능 설명/비교/동작 확인 | ANALYSIS | 경미하면 N/A, 판단 필요시 critic 역할 |
 | 도구/설정 조사 | N/A | 불필요 |
 | subagent 결과 전달 | N/A | 직접 검증 1건 필수 |
 
