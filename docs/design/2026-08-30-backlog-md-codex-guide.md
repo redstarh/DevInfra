@@ -119,7 +119,8 @@ backlog board                                                          # 보드 
 - **`--ac`는 쉼표로 분리되지 않는다.** `--ac "a,b"`는 AC **1건**이 된다. 2건은 `--ac "a" --ac "b"`.
 - **`statuses`는 CLI로 못 바꾼다.** `backlog config set statuses ...`는 거부된다 →
   `backlog/config.yml`을 직접 편집한다.
-- **`task delete`는 문법이 다르다.** 태스크 파일을 `rm`해도 도구는 정상 동작한다(정본이 평문 md라서).
+- **삭제는 `task delete`가 아니다.** 그 문법은 거부된다 — MCP는 `task_archive`를 노출한다.
+  급하면 태스크 파일을 `rm`해도 도구는 정상 동작한다(정본이 평문 md라서).
 - **git remote가 없으면 매 명령마다 경고가 난다.** `backlog config set remoteOperations false`로
   내리고, remote를 붙이면 `true`로 되돌린다.
 
@@ -150,6 +151,49 @@ backlog config get statuses           # Awaiting Decision 이 있나
 ```
 
 `codex doctor`로 설치·설정·런타임 건강도를 함께 볼 수 있다.
+
+## §11. 배선 실측 결과 (2026-08-30 — 실제로 등록하고 확인함)
+
+`codex mcp add backlog -- backlog mcp start` 실행 결과:
+
+- 출력이 **`Added global MCP server 'backlog'`** — Codex 자신이 "global"이라고 말한다(§2의 추론이 사실로 확정).
+- `~/.codex/config.toml`이 65줄 → 69줄. 추가된 것은 **정확히 4줄**:
+
+  ```toml
+  [mcp_servers.backlog]
+  command = "backlog"
+  args = ["mcp", "start"]
+  ```
+
+- `codex mcp list` → `backlog | backlog | mcp start | enabled`. `cwd`가 `-`이므로 **작업 디렉터리에서 루트를 찾는다.**
+- 제거는 `codex mcp remove backlog` 한 줄이다.
+
+### stdio 핸드셰이크로 확인한 서버 실체
+
+`initialize` → `tools/list`를 직접 흘려보낸 결과:
+
+- `serverInfo`: **`backlog.md` 1.50.1**, capabilities `tools` · `resources` · `prompts` · `logging`
+- 서버가 세션 시작 지침을 스스로 준다: *"At the beginning of each session, list the available resources and
+  read the first one to understand how to use Backlog.md for task management."*
+- **`Awaiting Decision`이 `task_create`의 status enum에 실제로 들어 있다** →
+  `backlog/config.yml` 수정이 에이전트 인터페이스까지 전달되는 것을 확인했다.
+- enum에 **`Draft`**도 있다 — `config.yml`의 `statuses`에 없어도 존재하는 내장 상태다.
+- 로그 1건: *"Client does not support MCP roots capability, staying in fallback mode."* —
+  roots를 광고하지 않는 클라이언트에서는 cwd 기반 폴백으로 동작한다는 뜻이다(내 프로브가 그랬다).
+
+### 노출되는 MCP 툴 20개
+
+| 묶음 | 툴 |
+|---|---|
+| 지침 | `get_backlog_instructions` (`overview`/`task-creation`/`task-execution`/`task-finalization`) |
+| 태스크 | `task_create` · `task_list` · `task_search` · `task_edit` · `task_view` · `task_archive` · `task_complete` |
+| 마일스톤 | `milestone_list` · `milestone_add` · `milestone_rename` · `milestone_remove` · `milestone_archive` |
+| 완료 정의 | `definition_of_done_defaults_get` · `definition_of_done_defaults_upsert` |
+| 문서 | `document_list` · `document_view` · `document_create` · `document_update` · `document_search` |
+
+**`document_*`가 있다는 것에 유의한다.** Backlog.md는 문서도 관리할 수 있지만, **§7의 경계는 그대로다** —
+결정·판정 근거는 리포의 `docs/`에 두고 원장에 넣지 않는다. 문서 계층까지 도구로 옮기는 것은
+별도 결정 사항이며 아직 검토하지 않았다.
 
 ---
 
