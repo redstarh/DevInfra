@@ -14,6 +14,7 @@ Claude Code 네이티브 에이전트 기반 오케스트레이션 환경.
 | 보안 검토 | `/security-review` skill | — | 보안 민감 코드 (인증/입력/쿼리/암호) |
 | 분석/설계 검증 | `general-purpose` | opus | 분석·설계 결론 독립 검증 (critic 역할) |
 | 완료 검증 | `general-purpose` | sonnet | 테스트 적정성, 완료 근거 확인 |
+| 독립 사용자 역할 테스트 | `testagent` | opus | 사용자 여정·권한 경계·저장/동기화·cleanup을 직접 산출물로 판정. 쓰기 도구 없음(구현 수정 금지). 규약 정본은 `DevInfra/TestAgent/` |
 | 테스트 작성 | `general-purpose` | sonnet | TDD, 단위/통합 테스트 |
 | 디버깅 | `general-purpose` | opus | 근본원인 분석, 회귀 추적 |
 | 문서 작성 | `general-purpose` | haiku/sonnet | README, API docs |
@@ -25,11 +26,12 @@ Claude Code 네이티브 에이전트 기반 오케스트레이션 환경.
 ## Orchestration
 
 - 복잡한 요청 → **Plan** → **general-purpose**(구현)
-- 코드 작성 후 → **general-purpose(opus)** 리뷰 패스 (작성자와 다른 컨텍스트)
-- 분석/설계 결론 → **general-purpose(opus)** 독립 검증 (SVG gate)
-- 보안 민감 코드 → **/security-review**
+- 코드 작성 후 → **general-purpose(opus)** 리뷰 패스 (작성자와 다른 컨텍스트). 요청 절차·템플릿은 `superpowers:requesting-code-review`(`code-reviewer.md`), 피드백 처리는 `receiving-code-review`
+- 계획 실행 → **`superpowers:subagent-driven-development`** (task당 fresh 구현 subagent + task별 리뷰 + 최종 전체 리뷰)
 - 독립 작업은 병렬 실행 (한 응답에 여러 Agent 호출)
-- 대규모 다단계 팬아웃은 `Workflow` 툴 — 사용자가 명시 요청했을 때만
+- **언제 검증을 위임하는지는 `rules/self-verification-gate.md`가 소유한다** — 여기서 재서술하지 않는다
+
+**subagent 컨텍스트 원칙** (superpowers 공통): subagent에 내 세션 히스토리를 물려주지 않는다. 필요한 것만 정확히 구성해 전달한다.
 
 ## Coding Style
 
