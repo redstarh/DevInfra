@@ -1,9 +1,10 @@
 ---
 id: TASK-6
 title: TestAgent validator 검사 범위 강화
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-08-30 05:16'
+updated_date: '2026-08-30 05:33'
 labels: []
 dependencies: []
 ordinal: 6000
@@ -17,9 +18,9 @@ TASK-3 검증에서 validate_testagent.sh 의 사각지대 4건이 mutation 테�
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 reject_text 가 대소문자를 무시하고 검사한다
-- [ ] #2 사각지대를 설명하는 문서 언급이 실제 의존과 구분되어 false positive 로 잡히지 않는다
-- [ ] #3 필수 템플릿에 내용 단정을 추가하거나 최소 바이트·행 기준으로 교체해 1바이트 통과를 막는다
-- [ ] #4 검사 범위를 스크립트 자신과 비-md 자산까지 확대한다
-- [ ] #5 mutation M6·M8·M9·M10 이 exit 1 로 떨어지고 원본 트리는 PASS 를 유지하는 것을 실행 출력으로 확인한다
+- [x] #1 reject_text 가 대소문자를 무시하고 검사한다
+- [x] #2 사각지대를 설명하는 문서 언급이 실제 의존과 구분되어 false positive 로 잡히지 않는다
+- [x] #3 필수 템플릿에 내용 단정을 추가하거나 최소 바이트·행 기준으로 교체해 1바이트 통과를 막는다
+- [x] #4 검사 범위를 스크립트 자신과 비-md 자산까지 확대한다
+- [x] #5 mutation M6·M8·M9·M10 이 exit 1 로 떨어지고 원본 트리는 PASS 를 유지하는 것을 실행 출력으로 확인한다
 <!-- AC:END -->

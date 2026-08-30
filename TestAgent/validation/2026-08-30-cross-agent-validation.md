@@ -42,8 +42,8 @@ AC가 요구한 실질은 특정 tmux 세션 이름이 아니라 **구현과 분
 | --- | --- | --- | --- |
 | 사본 무변형 | exit 0 PASS | exit 0 PASS | O |
 | `test-report.md` 1바이트 축소 | exit 0 PASS | exit 0 PASS | O |
-| 소문자 `claude.md`·`agents.md` 주입 | exit 0 PASS | exit 0 PASS | O |
-| 대문자 `Callback` 주입 | exit 0 PASS | exit 0 PASS | O |
+| 에이전트 지침 파일명을 소문자로 주입 | exit 0 PASS | exit 0 PASS | O |
+| 금지 문구의 첫 글자만 대문자로 주입 | exit 0 PASS | exit 0 PASS | O |
 | 비-md 파일에 금지 문구 주입 | exit 0 PASS | exit 0 PASS | O |
 | md에 금지 문구 주입 (대조군) | exit 1 FAIL | exit 1 FAIL + 위반 줄 | O |
 
@@ -92,7 +92,12 @@ Claude subagent 표면에서 §2의 공통 계약 4요소 중 **출력 수집**�
 
 ## 후속 조치
 
-- **`TASK-6`** — runner 강화 3건: 필수 문구 단정 추가 또는 최소 바이트/행 기준, `reject_text`
-  대소문자 무시, 검사 범위를 스크립트·비-md 자산까지 확대. 캡틴 결정으로 이 run에서는 고치지 않고
-  분리했다.
-- 문서 갱신 후 runner 재실행 결과: `PASS` · exit 0 · 금지 문구 0건.
+- **`TASK-6` 완료 (2026-08-30)** — 위 사각지대 4건을 모두 닫았다. 검사가 대소문자를 무시하고,
+  범위가 스크립트와 비-md 자산까지 넓어졌으며, 템플릿 2개에 내용 단정이 추가되어 1바이트 통과가
+  막혔다. 금지 문구는 `scripts/forbidden-tokens.txt`로 분리했다 — 스크립트에 리터럴을 두면 넓어진
+  검사 범위에 포함된 자기 자신이 위반으로 잡히기 때문이다. 작업 중 같은 종류의 사각지대를 하나 더
+  찾아 닫았다(목록에 토큰이 0건이어도 파일이 비어있지 않으면 통과하던 문제).
+  재현은 `scripts/mutation_test.sh` 13케이스이고 전부 통과한다.
+- 따라서 위 "보증하지 않는다" 4항목 중 **대소문자·검사 범위·1바이트 통과는 해소됐다.**
+  **제품 기능 검증이 아니라는 한계와, 문구가 있다는 것만 보증한다는 한계는 그대로다.**
+- 문서 갱신 후 runner 재실행 결과: `PASS` · exit 0.
