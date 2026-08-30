@@ -19,6 +19,8 @@
 | **C. 문서 트랙** | 규칙/설계서/CLAUDE.md/설정 파일 수정 | 2→5→9 | ~70% |
 | **D. 분석 트랙** | 로그 분석, 조사, 리포트 (코드 변경 없음) | 1→9 | ~80% |
 
+TDD(5단계)는 **A·B 트랙만** 적용. C·D 트랙은 대상 아님.
+
 ```
 트랙 판별:
 소스 코드 변경?
@@ -32,12 +34,17 @@
 
 ### 0단계: Specify + Clarify
 
+**실행체: `superpowers:brainstorming`** — Spike/Bounded/Architectural 3경로 분류 후 승인 게이트. 아래는 그 위에 얹는 우리 요건.
+
 - **Specify**: 요구사항 정의 (WHAT/WHY만, HOW 금지). Given/When/Then 형식 AC.
 - **Clarify**: 모호성 체크 → 캡틴 확인 (추측 금지). **공식 문서 미확인으로 추측하여 넘어가기 금지.**
+- 캡틴 확인은 `AskUserQuestion` 사용 (CLAUDE.md `<failure_mode_guards>`). brainstorming의 HARD-GATE(승인 없이 구현 금지)를 그대로 적용한다.
 
 ### 1단계: 분석
 
 요구사항과 데이터 기반으로 영향도/오류/개선사항 파악. 처음 한 번 수행, 이후 필요시만.
+
+**버그/테스트 실패/예기치 않은 동작이면 `superpowers:systematic-debugging`을 먼저 호출한다** (Iron Law: 근본원인 조사 전 수정 금지). 그 결과 결론에 SVG ANALYSIS gate(A1~A5)를 적용해 critic agent로 검증한다 — 디버깅 절차는 skill, 결론 판정은 SVG.
 
 > **로그 원본을 메인 컨텍스트에 직접 넣지 말 것** — 반드시 bash 전처리 후 요약만 전달.
 > 대규모 분석은 subagent에 위임. 프로젝트별 로그 분석 규칙은 해당 프로젝트 `.claude/rules/` 참조.
@@ -48,7 +55,9 @@
 
 ### 3단계: 상세설계
 
-전체 소스 구조를 고려한 상세 설계 방안 마련. 산출물: `docs/design/` 설계서 (Acceptance Scenarios 포함)
+**실행체: `superpowers:writing-plans`** — File Structure → Task Right-Sizing → task별 테스트/커밋 단위.
+
+산출물: `docs/design/` 설계서 (Acceptance Scenarios 포함). ⚠️ **경로 오버라이드** — writing-plans 기본값 `docs/superpowers/plans/YYYY-MM-DD-<name>.md`를 쓰지 말고 `docs/design/`을 쓴다 (skill이 사용자 경로 우선을 허용).
 
 - **A트랙**: `4 Lenses 검증` 섹션 필수 (`four-lenses-design-review.md` 참조)
 - **B트랙**: 해당 관점만 간략 기술
@@ -58,17 +67,23 @@
 최종 설계안 확정. 산출물: 변경 대상 파일 목록 + 영향 범위.
 품질: `four-lenses-design-review.md` + SVG DESIGN gate.
 
-### 5단계: 개발
+### 5단계: 개발 — TDD 사이클
 
-최종 설계안 기준 구현. 품질: SVG DEVELOPMENT gate (V1~V5).
+**실행체: `superpowers:test-driven-development`** (red → green → refactor). 계획 실행 방식은 같은 세션이면 `subagent-driven-development`, 별도 세션이면 `executing-plans`.
 
-### 6단계: 테스트 작성
+⚠️ **순서 재정의 (2026-08-19)** — 기존 "5 개발 → 6 테스트 작성" 순서를 **테스트 우선**으로 뒤집는다. 5단계 안에서 실패하는 테스트를 먼저 쓰고 실패를 확인한 뒤 최소 구현으로 통과시킨다. Iron Law: `NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST`.
 
-변경 소스 대상 테스트 작성. 품질: SVG TEST gate (T1~T3).
+- **적용 범위**: A·B 트랙만. C(문서)·D(분석) 트랙은 TDD 대상 아님.
+- **예외** (캡틴 확인 필요): 버려질 프로토타입, 생성된 코드, 설정 파일.
+- 품질: SVG DEVELOPMENT gate (V1~V5) + TEST gate T0(red-green 증거).
+
+### 6단계: 테스트 보강
+
+5단계 TDD 사이클에서 나오지 않은 것을 채운다 — 엣지케이스/경계값/null·empty(T2), 실패·예외 시나리오(T3), 통합 테스트. 커버리지 대조(T1). 품질: SVG TEST gate (T1~T3).
 
 ### 7단계: 테스트 수행
 
-테스트 전체 수행. 품질: SVG TEST gate (T4~T5).
+테스트 전체 수행. 품질: SVG TEST gate (T4~T5). 완료 주장 전 `superpowers:verification-before-completion`으로 검증 명령을 직접 실행해 증거를 확보한다.
 
 ### 9단계: 완료/반복
 
@@ -77,7 +92,9 @@
 | **반복** | 오류 시 2~7단계 반복 → 오류 없을 때까지 |
 | **simplify** | A/B 트랙만: commit 전 `/simplify` 실행. 수정 있으면 7단계 재실행. |
 | **commit** | conventional commits (`feat:`, `fix:`, `refactor:` 등) |
-| **리뷰** | 리뷰 요청 → Approve 전 Done 전환 금지. 기준: `common/code-review.md` |
+| **리뷰** | `superpowers:requesting-code-review`로 요청 → `receiving-code-review`로 피드백 처리. Approve 전 Done 전환 금지. 심각도 매핑·판정 기준: `common/code-review.md` |
+| **브랜치 정리** | `superpowers:finishing-a-development-branch` — 병합/정리 방식 결정. push·병합은 캡틴 확인 후. |
+| **문서 마감** | **작업 원장**에 태스크 상태·미결·소유자를 남기고, handoff에는 다음 한 걸음만 남긴다. 원장 도구(Backlog.md)·상태·조작은 `task-management.md`, 3층 분리 규약은 CLAUDE.md `<work_continuity>`, 세션 인계 절차는 `session-handover.md`. |
 
 ---
 
@@ -93,7 +110,10 @@
 ### 세션 분리 규칙
 
 - 1단계(분석) 완료 시 결과를 파일 저장 → 새 세션에서 2단계부터
+- **다음 세션이 로드할 양을 의식한다** — handoff는 짧게(~120줄), 전체 Task·상태는 작업 원장에, 함정·결정은 영구 문서에. 세션 시작에 당장 안 쓸 내용이 통째로 로드되면 컨텍스트를 낭비하고 낡은 내용을 정본으로 오인한다
 - 예외: 소규모(에러 5건 이하)면 세션 분리 없이 진행 가능
+- **끊기 전에 원장과 handoff를 갱신한다** — 이 절이 *언제 끊을지*를 정하고, CLAUDE.md `<work_continuity>`가 *무엇을 어디에 남길지*, `session-handover.md`가 *어떻게 넘길지*를 정한다. 갱신 시점은 3단계 직후·**각 태스크 완료 직후**·9단계 마감이며 별도 지시를 기다리지 않는다.
+- **인계 트리거**: 남은 컨텍스트 ≲35% / compact 경고 / 태스크 3개 연속 완료 중 먼저 오는 것. **태스크 경계에서만** 끊는다 — 반쯤 고친 코드를 넘기지 않는다.
 
 ### Continuation 방지
 
@@ -116,17 +136,21 @@
 
 | 단계 | SubAgent (역할) | 모델 | Skill | LSP | 병렬 |
 |------|----------------|------|-------|-----|------|
-| 0 Specify | 요구분석 | opus | - | - | - |
-| 1 분석 | `Explore` → 분석 | opus | - | `documentSymbol`, `findReferences` | O |
+| 0 Specify | 요구분석 | opus | `superpowers:brainstorming` | - | - |
+| 1 분석 | `Explore` → 분석 | opus | `superpowers:systematic-debugging` (버그 시) | `documentSymbol`, `findReferences` | O |
 | 2 구조파악 | `Explore` → `Plan` | - | - | `documentSymbol`, `workspaceSymbol` | O |
-| 3 상세설계 | `Plan` | - | - | `findReferences` (영향도) | - |
+| 3 상세설계 | `Plan` | - | `superpowers:writing-plans` (경로는 `docs/design/`) | `findReferences` (영향도) | - |
 | 4 설계검토 | critic → `Plan` | opus | - | `findReferences` (교차검증) | - |
-| 5 개발 | 구현 | sonnet/opus | - | `goToDefinition`, `ty check` | O |
-| 6 테스트 | 테스트 작성 | sonnet | - | `documentSymbol` | O |
-| 7 테스트수행 | verifier, 디버깅(실패시) | sonnet/opus | - | `ty check` | - |
-| 9 완료 | code-reviewer → verifier → 커밋 | opus | `/simplify`, `/security-review` | `ty check` (self-check) | - |
+| 5 개발 | 구현 | sonnet/opus | `superpowers:test-driven-development` + `subagent-driven-development`(동일 세션) / `executing-plans`(별도 세션) | `goToDefinition`, `ty check` | O |
+| 6 테스트 보강 | 테스트 작성 | sonnet | - | `documentSymbol` | O |
+| 7 테스트수행 | verifier, 디버깅(실패시) | sonnet/opus | `superpowers:verification-before-completion`, `systematic-debugging`(실패 시) | `ty check` | - |
+| 9 완료 | code-reviewer → verifier → 커밋 | opus | `superpowers:requesting-code-review` → `receiving-code-review` → `finishing-a-development-branch`, `/simplify`, `/security-review` | `ty check` (self-check) | - |
 
-**병렬 규칙**: 독립 파일/모듈은 병렬 실행. 이전 단계 결과 의존 시 순차.
+**병렬 규칙**: 독립 파일/모듈은 병렬 실행. 이전 단계 결과 의존 시 순차. 절차는 `superpowers:dispatching-parallel-agents`.
+
+**skill vs agent 역할 분리** — superpowers skill은 **절차(how)**를, SVG gate는 **판정(pass/fail)**을 담당한다. skill을 따라 작업한 뒤에도 결론 검증은 별도 agent에 위임한다 (`self-verification-gate.md`). 반대로 skill이 요구하는 "명령 직접 실행해 증거 확보"는 메인이 수행한다 — 위임 대상이 아니다.
+
+**신규 skill 작성**: `superpowers:writing-skills`로 작성 → `/skill-stocktake`로 감사 (작성 ≠ 감사, 별도 패스).
 
 **LSP 우선 원칙** (SoT — 전역 기본):
 
@@ -184,5 +208,8 @@ Python 심볼/참조/정의 추적은 네이티브 `LSP` 툴 우선(서버: `pyr
 
 ---
 
-_최종 수정: 2026-05-01 — §2 GitHub Actions [skip ci] 규칙 추가 (CI 비용 절감 SoP 연동)_
+_최종 수정: 2026-08-28 — `<handoff>` → `<work_continuity>`(3층 분리) 개칭, 세션 인계 트리거·절차 연결(`session-handover.md`)._
+_이전: 2026-08-27 — handoff 연속성 규칙 연결. 9단계에 "handoff 마감" 행, §0-1 세션 분리 규칙에 갱신 시점 명시. 규약 본문은 CLAUDE.md `<handoff>`(중복 서술 금지)._
+_이전: 2026-08-19 — superpowers v6.3.0 통합. 5단계를 TDD(test-first)로 재정의, 6단계는 "테스트 보강"으로 변경. §0-2 Skill 열에 superpowers 매핑._
+_이전: 2026-05-01 — §2 GitHub Actions [skip ci] 규칙 추가 (CI 비용 절감 SoP 연동)_
 _이전: 2026-04-13 — 중복 제거 (SubAgent/Skill은 CLAUDE.md 참조), 프로젝트 전용 규칙은 각 프로젝트 .claude/rules/ 분리_
