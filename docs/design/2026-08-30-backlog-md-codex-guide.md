@@ -35,6 +35,13 @@ backlog --version
 
 ## §3. 배선 — 두 갈래 중 하나만
 
+### 트리거 — 되묻지 않고 돌린다
+
+**새 프로젝트에서 "태스크/작업 계획을 관리해달라"는 요청을 받으면 `backlog init`을 먼저 돌린다.**
+도입 여부를 다시 묻지 않는다 — 이미 확정된 결정이다. `backlog/`가 이미 있으면 건너뛴다.
+확인할 것은 init 여부가 아니라 **덮어쓸 파일이 있는가**(`CLAUDE.md`·`AGENTS.md`·`backlog/`)와
+**git remote가 있는가**(없으면 `remoteOperations false`)다.
+
 ⚠️ **병용할 수 없다.** `--integration-mode mcp`는 `--agent-instructions`와 결합이 거부된다.
 
 ### A. MCP (권장 — Claude Code 설정과 일치)
