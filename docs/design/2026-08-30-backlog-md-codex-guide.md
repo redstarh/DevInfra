@@ -195,6 +195,45 @@ backlog config get statuses           # Awaiting Decision 이 있나
 결정·판정 근거는 리포의 `docs/`에 두고 원장에 넣지 않는다. 문서 계층까지 도구로 옮기는 것은
 별도 결정 사항이며 아직 검토하지 않았다.
 
+## §12. ⚠️ 가장 중요한 함정 — 루트가 없으면 **툴이 0개**다
+
+등록은 됐는데 Codex 세션에서 툴이 안 보이는 것이 정상 동작일 수 있다. **작업 디렉터리에
+`backlog/`가 없으면 서버가 툴을 하나도 노출하지 않는다.** 같은 프로브를 위치만 바꿔 실행해 확인했다.
+
+| 실행 위치 | `--cwd` | tools | resources |
+|---|---|---|---|
+| `/Users/redstar` (루트 없음) | 없음 | **0개** | 1개 — `backlog://init-required` ("Backlog.md Not Initialized [/Users/redstar]") |
+| `/Users/redstar` | `--cwd <리포>` | **20개** | 4개 — `backlog://workflow/{overview,task-creation,task-execution,task-finalization}` |
+
+**진단법**: 툴이 0개면 `resources/list`를 보라. `backlog://init-required`가 오면 루트를 못 찾은 것이고,
+리소스 이름에 서버가 찾으려 한 경로가 그대로 찍힌다.
+
+**서버가 주는 세션 시작 지침은 `resources/list` → 첫 리소스 읽기다.** 루트가 있으면 첫 리소스가
+`backlog://workflow/overview`이고, 없으면 `backlog://init-required`다. `get_backlog_instructions`
+툴도 같은 내용을 주지만 **그 툴은 루트가 있을 때만 존재한다** — 그래서 지침이 툴이 아니라 리소스를 가리킨다.
+
+### 해결책 4가지
+
+**Codex에는 프로젝트별 MCP 설정이 없다.** `config.toml`의 `[projects."<경로>"]`는 `trust_level`만
+담고(실측) MCP를 덮어쓰지 못한다. 그래서 아래 중에서 고른다.
+
+| # | 방법 | 다중 프로젝트 | 설정 변경 |
+|--:|---|---|---|
+| **1** | **리포 안에서 Codex를 띄운다** — `cd <리포> && codex` 또는 `codex -C <리포>` | ✅ | **없음 (권장)** |
+| **2** | 관리 대상 리포마다 `backlog init`을 돌려 둔다 → 1번이 항상 성립 | ✅ | 리포별 1회 |
+| 3 | 단일 서버를 한 리포에 고정 — `codex mcp add backlog -- backlog mcp start --cwd <리포>` | ❌ 그 리포만 | 전역 1회 |
+| 4 | 리포별 이름으로 여러 개 등록 — `codex mcp add backlog-ohmy -- backlog mcp start --cwd <리포>` | ✅ | 리포 수만큼, 전부 상시 로드 |
+
+**1+2를 권한다.** 서버가 cwd에서 루트를 찾도록 설계돼 있으므로 등록은 일반형(`--cwd` 없이)으로 두고,
+띄우는 위치로 프로젝트를 고른다. 3번은 다중 프로젝트를 깨고, 4번은 서버 목록이 리포 수만큼 늘어난다.
+
+### 미확인
+
+MCP `roots` capability를 광고하는 클라이언트에서는 서버가 cwd 폴백을 쓰지 않는다
+(로그: *"Client does not support MCP roots capability, staying in fallback mode"*).
+**Codex가 roots를 광고하는지는 확인하지 않았다** — 광고한다면 루트 결정이 cwd가 아니라
+Codex의 워크스페이스를 따를 수 있다. 위 표는 roots를 광고하지 않는 클라이언트에서 측정한 값이다.
+
 ---
 
 _최초 작성: 2026-08-30. Claude Code 쪽 정본은 `~/.claude/rules/task-management.md`이며 원칙은 동일하다 —_
