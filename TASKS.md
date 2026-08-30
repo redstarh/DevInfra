@@ -1,98 +1,95 @@
-# 작업 원장 — 다중 프로젝트 forge (Gitea)
+# 작업 원장 — 태스크 원장 도구 (Backlog.md) · 리포 호스팅
 
-> **범위**: 여러 프로젝트를 공통으로 관리하는 로컬 forge 구축. 어느 개별 프로젝트에도 속하지 않는다 —
-> `OhMyEnglish/TASKS.md` 등 프로젝트별 원장과 별개이고 서로의 상태를 참조하지 않는다.
+> **범위**: 여러 프로젝트에 걸친 개발 인프라. 어느 개별 프로젝트에도 속하지 않는다 —
+> 프로젝트별 원장(`OhMyEnglish/TASKS.md` 등)과 별개이고 서로의 상태를 참조하지 않는다.
 > **이 파일이 이 작업 상태의 정본이다.**
 >
-> 조사: `docs/research/2026-08-30-wiki-task-tooling.html` · 결정: `docs/design/2026-08-30-wiki-task-tooling-decision.md`
-> 설치 전 브리핑: `docs/design/2026-08-30-gitea-briefing.html`
+> 조사: `docs/research/2026-08-30-wiki-task-tooling.html`
+> 결정: `docs/design/2026-08-30-wiki-task-tooling-decision.md` — **§후속을 반드시 먼저 읽을 것**
+> Gitea 브리핑: `docs/design/2026-08-30-gitea-briefing.html` — **폐기된 안. 이력으로만 보관**
 
-_최초 작성: 2026-08-30_
+_최초 작성 2026-08-30 · 최종 개정 2026-08-30 (Gitea 폐기 → Backlog.md 채택)_
 
 ---
 
-## 확정된 결정 (2026-08-30)
-
-착수 전 필수 4건이 전부 답을 받았다. **차단 없음.**
+## 확정된 결정
 
 | # | 결정 | 결과 |
 |---|---|---|
-| A | `~/AgentDev`(stock-agent, 커밋 1,049개) | **통합하지 않고 그대로 둔다.** Synology NAS remote 유지, Gitea 편입 대상 아님 |
-| B | GitHub에 있는 리포의 정본 | **GitHub에 둔다.** `AllMyEnglish`·`ai-driven-development`는 GitHub이 정본 |
-| C | git이 아닌 프로젝트 | **지금 편입한다.** `En-Coach`·`WSEAgent`·`DevInfra` |
-| D | 공통 문서의 집 | **`~/MyProject/DevInfra` 신설** (이 리포). `Research`는 흡수 후 폐기 |
-
-**B의 실행 방식** — 정본이 GitHub이므로 **Gitea에 이중화하지 않는다** (Simplicity First). 한 보드에서 전부 보고
-싶어지면 pull mirror를 나중에 추가하면 되고, 그것은 되돌리기 쉬운 선택이다. Task 10 참조.
-
----
-
-## Gitea 편입 대상 — 5개
-
-| 리포 | 현재 상태 | 편입 이유 |
-|---|---|---|
-| `OhMyEnglish` | git 있음, `.git` 7.3MB, 커밋 107, **remote 없음** | **최우선** — remote가 없어 PR 개념 자체가 성립하지 않는다 |
-| `cursor-todo-app` | git 있음, `.git` 0.23MB, 커밋 1, remote 없음 | remote 없음 |
-| `En-Coach` | **git 없음**, 소스 ~700KB (74MB는 전부 `.venv`) | 신규 git init |
-| `WSEAgent` | **git 없음**, ~350KB (`.gitignore`에 `data/` 등 이미 있음) | 신규 git init |
-| `DevInfra` | **git 없음** (이 리포) | 신규 git init |
-
-예상 저장량 합계 **~8.6MB** — A·B 결정으로 큰 두 개(stock-agent 18MB, 외부 클론들)가 빠져 브리핑의 26.6MB보다 줄었다.
-
-### 편입하지 않는 것
-
-- `~/AgentDev` (stock-agent) — 결정 A
-- `AllMyEnglish` · `ai-driven-development` — 결정 B (GitHub 정본)
-- 남의 리포 클론 3건 (`claude-code-tips` · `ml-intern` · `ai-driven-development-lecture`) — 관리 대상 아님
+| A | `~/AgentDev`(stock-agent) | 통합하지 않고 그대로 둔다. Synology NAS remote 유지 |
+| B | 리포 호스팅 정본 | **GitHub.** 자체 forge를 세우지 않는다 |
+| C | git이 아닌 프로젝트 | 편입 완료 — `En-Coach`·`WSEAgent`·`DevInfra` |
+| D | 공통 문서의 집 | `~/MyProject/DevInfra` 신설 (이 리포). `Research`는 흡수 후 폐기 |
+| **E** | **Gitea 도입** | **폐기.** GitHub과 기능 중복이고, 문서화된 고통(Actions 2,000분)을 해결하지 않는다 |
+| **F** | **태스크 원장 도구** | **`Backlog.md` 채택.** 층 ②만 대체하고 handoff(층 ①)·영구 지식(층 ③)은 그대로 |
+| **G** | 도입 범위 | **`OhMyEnglish` 한 곳 시범** 후 확대 판단 |
+| **H** | MCP 연동 | **켠다** — `backlog mcp start`, 프로젝트 스코프 |
 
 ---
 
 ## Task
 
-상태: `대기` / `진행` / `완료`. **완료 전환은 증거 열의 명령을 직접 돌려 출력을 확인한 뒤에만 한다.**
+상태: `대기` / `진행` / `완료` / `차단` / `폐기`. **완료 전환은 증거 열의 명령을 직접 돌려 출력을 확인한 뒤에만 한다.**
 
-| # | Task | 상태 | 완료 증거 |
-|--:|---|---|---|
-| 0 | `DevInfra` 신설 + `Research` 내용 이관 | 완료 | 파일 4개 이관 확인 (2026-08-30) |
-| 1 | `En-Coach/.gitignore` 보강 — `.venv`·`__pycache__`·`.pytest_cache`·`egg-info` | 완료 | `check-ignore -v`: `app/backend/.env` → `.gitignore:2` · `.venv/pyvenv.cfg` → `.gitignore:5` |
-| 2 | `git init` 3개 (`DevInfra`·`En-Coach`·`WSEAgent`) + 최초 커밋 | 완료 | `DevInfra 507f948` 6파일·`.git` 160K · `En-Coach 7b9516d` 45파일·364K · `WSEAgent 1b429ed` 28파일·384K · **금지패턴 0건** (스테이징 검사) |
-| 3 | `OhMyEnglish`에서 이관된 문서 2건 `git rm` | 완료 | `9165f06` · 이관 전 `diff -q` 로 사본 동일성 확인 · `docs/research/` 디렉터리 소멸 확인 |
-| 4 | `brew install gitea` | 대기 | `gitea --version` 출력 (현재 미설치 확인됨) |
-| 5 | 비밀값 3개 생성 + `app.ini` 작성 — 브리핑의 켤/끌 목록 반영 | 대기 | `app.ini` 내용. **`/tmp/giteatest/`의 조사용 평문 비밀값 재사용 안 함** 확인 |
-| 6 | 기동 → HTTP 200 → **유휴 메모리 이 맥에서 실측** | 대기 | `curl -o /dev/null -w '%{http_code}'` = 200 · RSS 20초 간격 3회 · 프로세스 수 1 |
-| 7 | 관리자 계정 + Organization 1개 생성 | 대기 | `gitea admin user create --admin` 출력 · org 페이지 200 |
-| 8 | 리포 5개 편입 — `OhMyEnglish` 먼저 | 대기 | 리포별 `git push --all` 출력 · Gitea에 커밋 수 일치 |
-| 9 | **백업·복구 리허설** — `gitea dump` → 복원 → 이슈 1건 조회 | 대기 | dump 파일 크기 · 복원 후 이슈 조회 성공 출력 |
-| 10 | (선택) GitHub 정본 리포 2개를 pull mirror로 추가 | 보류 | 결정 B에 따라 기본은 안 한다 |
-| 11 | PR 1건 실제 왕복 — 이슈 → 브랜치 → PR → 라인 코멘트 → merge | 대기 | PR URL · merge 커밋 해시 |
-| 12 | 실측 유휴 메모리를 결정 기록에 반영 | 대기 | 결정 문서에 재측정값 커밋 |
+### 완료
 
-**Task 9를 건너뛰지 않는다.** 이슈·PR·리뷰 코멘트는 bare 리포가 아니라 SQLite에만 있다 — 복구를 한 번
-돌려보기 전에는 "이슈를 잃지 않는다"고 말할 수 없다.
+| # | Task | 완료 증거 |
+|--:|---|---|
+| 0 | `DevInfra` 신설 + `Research` 내용 이관 | 파일 4개 이관 확인 |
+| 1 | `En-Coach/.gitignore` 보강 | `check-ignore -v`: `.env`→`:2` · `.venv/pyvenv.cfg`→`:5` |
+| 2 | `git init` 3개 + 최초 커밋 | `DevInfra 507f948`(6파일) · `En-Coach 7b9516d`(45파일) · `WSEAgent 1b429ed`(28파일) · **금지패턴 0건** |
+| 3 | `OhMyEnglish`에서 문서 2건 `git rm` | `9165f06` · 이관 전 `diff -q` 동일성 확인 |
+| 4 | `brew install backlog-md` | `backlog 1.50.1` (`/opt/homebrew/bin/backlog`) |
+| 5 | `OhMyEnglish`에 `backlog init` + MCP 등록 + 상태 매핑 | 덮어쓴 파일 0 · **자동 커밋 없음**(HEAD `9165f06` 불변) · `.mcp.json` 생성 · `statuses`에 `Awaiting Decision` 추가 |
+| 6 | 핵심 조작 검증 (상태·AC·의존성·브랜치 스캔) | `-s` · `--check-ac 1`→`- [x] #1` · `--dep`→`dependencies: - TASK-1` · `board`가 `"Indexing 2 other local branches"` |
+
+### 남은 것
+
+| # | Task | 상태 | 소유자 | 증거 기준 |
+|--:|---|---|---|---|
+| 7 | `.mcp.json` MCP 서버 **승인** | 대기 | **`OhMyEnglish` 세션** | `claude mcp list`에서 `backlog` = Connected |
+| 8 | `TASKS.md` 마이그레이션 — 태스크 55행 → `backlog/tasks/`, 비태스크 37행 → `docs/` | **차단** | 캡틴 + `OhMyEnglish` 세션 | 아래 차단 사유 2건 해소 후 |
+| 9 | `session-handover.md` §4 지표 #2를 줄 번호 → **태스크 ID**로 개정 | 대기 | 캡틴 | 개정 커밋 |
+| 10 | GitHub 비공개 리포 생성 + 5개 push (`OhMyEnglish`·`cursor-todo-app`·`En-Coach`·`WSEAgent`·`DevInfra`) | 대기 | 캡틴 승인 후 | 리포별 `git push --all` 출력 |
+| 11 | `remoteOperations: true` 복원 | 대기 | — | Task 10 이후. `backlog task list`에 경고 없음 |
+| 12 | 시범 평가 → 확대 여부 결정 | 대기 | 캡틴 | 층 ①과의 이중 기입 발생 여부 실측 |
+| 13 | (선택) 셀프호스티드 러너로 Actions 2,000분 문제 해결 | 대기 | 캡틴 | 이 원장 범위 밖일 수 있음 — SoP는 `~/AgentDev/docs/ops/` |
+
+### 폐기 — Gitea 관련 (재개하지 않는다)
+
+`brew install gitea` · `app.ini` 작성 · 기동·유휴 메모리 실측 · admin/org 생성 · 리포 5개 편입 ·
+`gitea dump` 백업 리허설 · pull mirror — **전부 폐기.** 사유는 결정 E, 근거는 결정 문서 §후속.
+재개 조건은 §후속의 "재검토 트리거"에만 있다.
 
 ---
 
+## Task 8 차단 사유 — 2건
+
+1. **`OhMyEnglish` 세션이 `TASKS.md`를 실시간으로 편집 중이다.** 관측: 315줄(이전 308줄), 소스 5개 modified.
+   그 세션이 유휴일 때 하거나 그 세션에 넘긴다.
+2. **분류 승인이 필요하다.** 표 92행 중 **약 40%(37행)가 태스크가 아니다** —
+   `B`(캡틴 결정 12행) · `F`(전역 규약 판정 근거 11행) · `H`(구성 완료 기록 6행) · 관련 문서 지도(8행).
+   일괄 변환하면 **결정 기록이 태스크로 변질된다.** 이 37행의 목적지(층 ③ 어디로)를 먼저 정해야 한다.
+
 ## 미결 · 리스크
 
-- ~~`En-Coach`에 `app/backend/.env`가 실재한다~~ → **해소.** `check-ignore`로 무시를 확인하고 커밋했다.
-  최초 커밋에 들어간 것은 `app/backend/.env.example`(템플릿)뿐이다. 다만 **`.gitignore`가 `.env` 한 줄만 덮고
-  있었다는 사실은 남는다** — 다른 프로젝트를 편입할 때 같은 검사를 반복한다.
-- **`~/MyProject/Research` 디렉터리가 빈 채로 남아 있다.** 이 세션의 작업 디렉터리라서 지우지 않았다.
-  세션 종료 후 `rmdir` 하면 된다.
-- **유휴 165MB는 이 맥에서 재측정한 값이 아니다.** 조사 세션(3-14)이 20초 간격 3회로 168,864~169,232KB를
-  측정했다. Task 6이 이것을 대체한다.
-- **리포 5개 · 이슈가 쌓인 뒤의 메모리를 모른다.** 빈 인스턴스 하한만 안다. bleve 이슈 인덱서가 주 증가
-  요인이고, 예산(유휴 ≤512MB)을 위협하면 `ISSUE_INDEXER_TYPE = db`로 내리는 선택지가 있다.
-- **`OhMyEnglish`는 다른 세션이 동시에 작업한다.** Task 3·8에서 그 세션의 브랜치 상태와 충돌하지 않게 시점을 맞춘다.
-- **Actions·Packages는 기본이 on이다.** Task 5에서 명시적으로 끄지 않으면 켜진 채로 뜬다 (`modules/setting/actions.go:47`).
+- **Backlog.md는 handoff를 써주지 않는다.** 층 ①은 그대로 사람이 쓴다. 도구가 층 ②를 맡으면서
+  **두 곳에 같은 상태를 적는 일이 생기는지**가 시범의 핵심 관찰 대상이다(Task 12).
+- **`--ac`는 쉼표로 분리되지 않는다.** `--ac "a" --ac "b"`로 반복해야 한다. 실측으로 확인한 함정.
+- **`statuses`는 CLI로 못 바꾼다** — `backlog/config.yml` 직접 편집. 다른 프로젝트로 확대할 때 반복된다.
+- **`~/MyProject/Research`가 빈 채로 남아 있다.** 이 세션의 작업 디렉터리라서 지우지 않았다. 세션 종료 후 `rmdir`.
+- **`redstarh/WSEAgent`가 GitHub에 이미 있고 비어 있다.** Task 10에서 새로 만들지 말고 그 리포에 push한다.
+- **`ai-driven-development` remote가 404다.** Task 10에서 정리 대상.
+- `OhMyEnglish`의 `backlog/`·`.mcp.json`은 아직 untracked다. 그 세션이 커밋 시점을 정한다.
 
 ## 결정 기록 (뒤집힌 것 포함)
 
 | 날짜 | 결정 | 상태 |
 |---|---|---|
-| 2026-08-30 | 위키 도구를 세우지 않고 Gitea 리포 브라우저의 `docs/**.md` 렌더링으로 대체 | 유효 |
-| 2026-08-30 | 태스크 상태의 정본은 프로젝트별 `TASKS.md` 유지 — Gitea 이슈는 버그·PR 트래킹 전용 | 유효 |
-| 2026-08-30 | Backlog.md는 제약을 만족하나 인계 규약(`TASKS.md:줄번호`) 때문에 보류 | 유효 |
-| 2026-08-30 | ~~"Gitea Wiki로 리포 `docs/`를 위키 정본 삼기"를 확인해볼 가치가 있다~~ → **기각.** 별도 `<repo>.wiki` 리포가 정본이고 설정이 없다 (`models/repo/wiki.go:74`, `gitea#23640` open) | 뒤집힘 |
-| 2026-08-30 | 용도를 단일 프로젝트(OhMyEnglish)에서 **다중 프로젝트 공통**으로 확장 | 유효 |
-| 2026-08-30 | ~~공통 문서를 `OhMyEnglish/docs/`에 둔다~~ → **`DevInfra` 신설로 이관** | 뒤집힘 |
+| 2026-08-30 | 위키 도구를 세우지 않고 리포의 `docs/**.md` 렌더링으로 대체 | 유효 (GitHub이 렌더링) |
+| 2026-08-30 | 태스크 상태의 정본은 **리포 안 평문 md** | 유효 — 형태만 `TASKS.md` → `backlog/tasks/*.md` |
+| 2026-08-30 | ~~Backlog.md는 인계 규약(`TASKS.md:줄번호`) 때문에 보류~~ → **채택.** 줄 번호가 지킬 제약이 아니라 고칠 대상이었다 — 태스크 ID는 밀리지 않는다 | 뒤집힘 |
+| 2026-08-30 | ~~Gitea 하나를 도입한다 (165MB)~~ → **폐기.** GitHub과 중복이고 Actions 분 문제를 해결하지 않는다 | 뒤집힘 |
+| 2026-08-30 | ~~"Gitea Wiki로 리포 `docs/`를 위키 정본 삼기"를 확인할 가치가 있다~~ → **기각** (`models/repo/wiki.go:74`, `gitea#23640` open) | 뒤집힘 |
+| 2026-08-30 | ~~공통 문서를 `OhMyEnglish/docs/`에 둔다~~ → `DevInfra` 신설로 이관 (`9165f06`) | 뒤집힘 |
+| 2026-08-30 | 용도를 단일 프로젝트에서 다중 프로젝트 공통으로 확장 | 유효 |
