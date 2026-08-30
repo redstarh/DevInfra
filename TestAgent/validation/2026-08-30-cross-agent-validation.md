@@ -1,0 +1,98 @@
+# TestAgent 실행 결과 — cross-agent-validation-2026-08-30
+
+관련 태스크: `TASK-3`
+실행일: 2026-08-30 Asia/Seoul
+현재 판정: `PASS` — Codex 2개 표면과 Claude 독립 run 모두 통과했다. 이전 `BLOCKED`은 해소됐다.
+
+## 실행 맥락
+
+| 항목 | 값 |
+| --- | --- |
+| 대상 | DevInfra `TestAgent` 운영 계약과 템플릿 |
+| Runner | `TestAgent/scripts/validate_testagent.sh` |
+| 격리 자원 | DevInfra 작업 트리 · tmux 세션 `devinfra-testagent-task3` · `mktemp -d` 사본 |
+| 직접 검증 | 필수 문서·템플릿, Codex·Claude 공통 적용 문구, 입력 채널·runner 식별자·출력 수집·완료 신호, 특정 지침 파일명 비의존성 |
+
+## 시나리오 결과
+
+| ID | 실행 표면 | 판정 | 직접 확인한 산출물 |
+| --- | --- | --- | --- |
+| TA-01 | Codex 일반 셸 | PASS | `PASS: TestAgent contract is agent-neutral and reusable.` |
+| TA-02 | 새 tmux 세션 | PASS | `devinfra-testagent-task3` pane capture에서 같은 PASS 메시지 |
+| TA-03 | Claude 독립 subagent (어댑터 D) | PASS | exit 0 · 같은 PASS 문자열 · 단정 17건 개별 재현 · mutation 11건 |
+
+### TA-03 표면 해석 — 결정과 근거
+
+AC #3의 원래 문구는 "`claude_air_3-15`에 검증 요청을 주입한다"였고 이전 판의 TA-03 행도 표면을 그
+세션으로 적어 뒀다. 실제로는 **그 세션이 이 검증을 주관하는 Orchestrator 자신**이 되어, 자기 자신에게
+주입하는 형태로는 §1이 요구하는 Orchestrator/Runner 분리가 성립하지 않았다.
+
+캡틴 결정(2026-08-30): **AC #3을 표면 무관으로 읽고 충족 처리한다.** 근거는 §3 원칙 8
+"표면은 교체 가능하다 — Orca, 일반 셸, tmux는 runner 전달 방식일 뿐 테스트 계약을 바꾸지 않는다"다.
+AC가 요구한 실질은 특정 tmux 세션 이름이 아니라 **구현과 분리된 Claude 컨텍스트의 독립 판정**이며,
+어댑터 D run이 그것을 충족한다. 뒤집힌 사실을 남기는 이유는 다음 세션이 "tmux 주입을 안 했으니
+미완"이라고 되읽지 않게 하기 위함이다.
+
+## Orchestrator가 직접 재현한 증거
+
+§3 원칙 3(runner의 서술만으로 통과시키지 않는다)에 따라 Orchestrator가 같은 mutation을 독립 실행해
+대조했다. 전부 `mktemp -d` 사본에만 적용했고 원본 트리는 `git status` 무변화였다.
+
+| 변형 | Runner 보고 | Orchestrator 재현 | 일치 |
+| --- | --- | --- | --- |
+| 사본 무변형 | exit 0 PASS | exit 0 PASS | O |
+| `test-report.md` 1바이트 축소 | exit 0 PASS | exit 0 PASS | O |
+| 소문자 `claude.md`·`agents.md` 주입 | exit 0 PASS | exit 0 PASS | O |
+| 대문자 `Callback` 주입 | exit 0 PASS | exit 0 PASS | O |
+| 비-md 파일에 금지 문구 주입 | exit 0 PASS | exit 0 PASS | O |
+| md에 금지 문구 주입 (대조군) | exit 1 FAIL | exit 1 FAIL + 위반 줄 | O |
+
+대조군이 `exit 1`로 떨어지는 것까지 확인했으므로 **검사 자체는 작동하고 범위만 좁다.**
+
+## PASS의 보증 범위
+
+`validate_testagent.sh:31-49`는 세 종류 17건만 검사한다 — 필수 파일 5(`test -s`, `:8`),
+필수 문구 9(`grep -Fq`, `:17`), 금지 문구 3(`grep -RFn --include='*.md'`, `:25`).
+
+보증한다: 필수 문서 5개가 존재하고 비어있지 않다. 도구 중립 계약 4요소, 실행 표면 정리 절과
+"만들지 않은 세션 금지" 문장, test-plan 템플릿의 어댑터·정리 계획 항목이 문자열로 실재한다.
+
+보증하지 않는다:
+
+- 제품 기능 검증이 아니다. 대상 앱 AC 검증을 대신하지 않는다.
+- 템플릿이 쓸 만한지 보증하지 않는다. `scenario-matrix.md`·`test-report.md`는 내용 단정이 0건이고
+  1바이트만 있어도 통과한다.
+- 에이전트 비의존성을 보증하지 않는다. 대소문자 고정 문자열이고 검사 범위가 md로 제한된다.
+  스크립트 자신도 검사 대상 밖이다.
+- 문구가 **있다**는 것만 보증하며 그 문구가 일관된 절차를 서술하는지는 보증하지 않는다.
+
+fail-fast 구조라 한 번에 위반 1건만 보고한다.
+
+## 이 run이 드러낸 규약 공백 — 어댑터 D 신설
+
+Claude subagent 표면에서 §2의 공통 계약 4요소 중 **출력 수집**과 **완료 신호** 두 개가 실제로 깨졌다.
+
+- subagent의 일반 출력이 Orchestrator에 도달하지 않아 첫 run의 보고가 유실됐다. 보고 전송 호출을
+  프롬프트에 명시한 뒤에야 수집됐다.
+- 대기 상태 알림(`available`)이 먼저 도착해 완료로 오인할 수 있었다. 실제 보고는 그 뒤에 왔다.
+
+§6에 **어댑터 D(코딩 에이전트 subagent)** 를 추가하고 README 표면 표에도 행을 넣었다. 종료 코드가
+없는 표면이라는 점, 보고 도착만을 출력 수집으로 인정한다는 점, 대기 알림을 완료로 읽지 않는다는 점을
+계약 매핑과 함께 기록했다.
+
+## Cleanup
+
+| 항목 | 상태 | 확인 방법 |
+| --- | --- | --- |
+| Codex 일반 셸 run | 완료 | — |
+| `devinfra-testagent-task3` | **정리 완료** | `tmux ls`에 부재 (§7 확인 규칙) |
+| Claude subagent run 임시 경로 | 정리 완료 | `ls -d /tmp/ta03*` → no matches |
+| Orchestrator 재현용 사본 | 정리 완료 | `ls -d /tmp/verify-m8-*` → no matches |
+| `claude_air_3-15` · `codex_1-54` | 변경하지 않음 | TestAgent가 만들지 않은 세션 |
+
+## 후속 조치
+
+- **`TASK-6`** — runner 강화 3건: 필수 문구 단정 추가 또는 최소 바이트/행 기준, `reject_text`
+  대소문자 무시, 검사 범위를 스크립트·비-md 자산까지 확대. 캡틴 결정으로 이 run에서는 고치지 않고
+  분리했다.
+- 문서 갱신 후 runner 재실행 결과: `PASS` · exit 0 · 금지 문구 0건.
