@@ -5,6 +5,9 @@
 >
 > **도구**: **Backlog.md** (`brew install backlog-md`). 채택 근거와 기각한 대안은
 > `~/MyProject/DevInfra/docs/design/2026-08-30-wiki-task-tooling-decision.md` §후속이 정본이다.
+>
+> **Codex에서 쓸 때**: 원칙은 같고 **배선만 다르다**(`AGENTS.md`·MCP 전역 등록).
+> `~/MyProject/DevInfra/docs/design/2026-08-30-backlog-md-codex-guide.md`가 소유한다 — 여기서 재서술하지 않는다.
 
 ---
 
