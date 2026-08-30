@@ -67,6 +67,15 @@ backlog board                                                          # 보드 
 
 ## §5. 프로젝트 도입 절차
 
+### 트리거 — 되묻지 않고 돌린다
+
+**새 프로젝트에서 "태스크/작업 계획을 관리해달라"는 요청을 받으면 `backlog init`을 먼저 돌린다.**
+도입 여부를 다시 묻지 않는다 — 이미 확정된 결정이다. `backlog/`가 이미 있으면 건너뛴다.
+
+확인이 필요한 것은 init 여부가 아니라 이 둘이다:
+`CLAUDE.md`·`AGENTS.md`·`backlog/`가 이미 있어 **덮어쓸 위험이 있는가**, 그리고 **git remote가 있는가**
+(없으면 `remoteOperations false`).
+
 ```bash
 cd <리포>
 backlog init "<프로젝트명>" --defaults --integration-mode mcp --auto-open-browser false
@@ -89,10 +98,15 @@ MCP를 켜는 이유: 상태 갱신이 사람 손을 거치지 않아 일관성�
 
 ## §7. 도입 상태 · 미도입 프로젝트
 
+2026-08-30 실측 — 네 리포 모두 MCP 프로브에서 `tools=20`, 첫 리소스 `backlog://workflow/overview` 확인.
+
 | 프로젝트 | 상태 |
 |---|---|
-| `OhMyEnglish` | 시범 도입 — `init`+MCP 완료, `TASKS.md` 마이그레이션은 차단 중(비태스크 37행 분류 승인 대기) |
-| 그 외 | 미도입 |
+| `OhMyEnglish` | `init`+MCP 완료. `TASKS.md` 마이그레이션은 차단 중(비태스크 37행 분류 승인 대기) |
+| `En-Coach` | `init` 완료. `backlog/`는 **미추적** — 다른 세션이 작업 중이라 커밋 시점을 그쪽에 맡겼다 |
+| `WSEAgent` | `init` 완료·커밋(`23af084`) |
+| `DevInfra` | `init` 완료·커밋(`f348da4`) |
+| `cursor-todo-app` · 그 외 | 미도입 — §5 트리거에 따라 태스크 관리 요청 시 init |
 
 **미도입 리포에서는 기존 `TASKS.md` 표를 그대로 쓴다.** 단 **원칙 2(ID로 가리킨다)는 지금부터 적용한다** —
 줄 번호 대신 표의 태스크 번호(`Task 8`)로 지목한다. 도구 도입 여부와 무관하게 줄 번호는 쓰지 않는다.
