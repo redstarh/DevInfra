@@ -50,8 +50,9 @@ _최초 작성 2026-08-30 · 최종 개정 2026-08-30 (Gitea 폐기 → Backlog.
 | 7 | `.mcp.json` MCP 서버 **승인** | 대기 | **`OhMyEnglish` 세션** | `claude mcp list`에서 `backlog` = Connected |
 | 8 | `TASKS.md` 마이그레이션 — 태스크 55행 → `backlog/tasks/`, 비태스크 37행 → `docs/` | **차단** | 캡틴 + `OhMyEnglish` 세션 | 아래 차단 사유 2건 해소 후 |
 | 9 | `session-handover.md` §4 지표 #2를 줄 번호 → **태스크 ID**로 개정 | 대기 | 캡틴 | 개정 커밋 |
-| 10 | GitHub 비공개 리포 생성 + 5개 push (`OhMyEnglish`·`cursor-todo-app`·`En-Coach`·`WSEAgent`·`DevInfra`) | 대기 | 캡틴 승인 후 | 리포별 `git push --all` 출력 |
-| 11 | `remoteOperations: true` 복원 | 대기 | — | Task 10 이후. `backlog task list`에 경고 없음 |
+| 10 | GitHub **공개** 리포 push — 4/5 완료 | 진행 | — | 아래 "Task 10 결과" 참조. `OhMyEnglish`만 남음 |
+| 10-1 | **`OhMyEnglish` push 전 비밀값 처리** | **차단** | 캡틴 | 비밀번호 무효화(회전) 또는 비공개 push 결정 — 아래 차단 사유 |
+| 11 | `remoteOperations: true` 복원 (`OhMyEnglish`) | 대기 | — | Task 10-1 이후. `backlog task list`에 경고 없음 |
 | 12 | 시범 평가 → 확대 여부 결정 | 대기 | 캡틴 | 층 ①과의 이중 기입 발생 여부 실측 |
 | 13 | (선택) 셀프호스티드 러너로 Actions 2,000분 문제 해결 | 대기 | 캡틴 | 이 원장 범위 밖일 수 있음 — SoP는 `~/AgentDev/docs/ops/` |
 
@@ -62,6 +63,46 @@ _최초 작성 2026-08-30 · 최종 개정 2026-08-30 (Gitea 폐기 → Backlog.
 재개 조건은 §후속의 "재검토 트리거"에만 있다.
 
 ---
+
+## Task 10 결과 — 4개 공개 push 완료 (2026-08-30)
+
+캡틴 결정: **공개로 해도 된다**(나중에 필요하면 변경) · **`ai-driven-development`는 push하지 않는다**.
+
+push 전 5개 리포 전수 비밀값 스캔을 돌렸고, **깨끗한 4개만** 올렸다.
+
+| 리포 | GitHub | 파일 | 검증 |
+|---|---|---|---|
+| `WSEAgent` | `redstarh/WSEAgent` (기존 빈 리포에 push) | 28 | 비밀값 후보 0건 |
+| `cursor-todo-app` | `redstarh/cursor-todo-app` (신규) | 17 | 비밀값 후보 0건 |
+| `En-Coach` | `redstarh/En-Coach` (신규) | 57경로 | **GitHub 트리에 금지패턴 0건** (`.venv`·`__pycache__`·`.env` 미포함 확인) |
+| `DevInfra` | `redstarh/DevInfra` (신규) | 6 | 조사용 테스트 비밀값 3종 미유입 확인 (전부 `<생성>` 플레이스홀더) |
+
+전부 `private=false` · `main` 추적 · 로컬과 동기. `ai-driven-development`는 캡틴 지시로 제외(remote 404 정리도 불필요).
+
+### 오탐이었던 것 (재검사 낭비 방지)
+
+- `En-Coach/docs/operations/deployment.md` — `<password>`·`<long-random-secret>`·`<provider-key>` 전부 **플레이스홀더**
+- `OhMyEnglish/docs/ops/iam-setup-nova-sigv4.md` — `AKIA...`·`...`로 **생략 표기**, 실제 AWS 자격증명 아님
+- `OhMyEnglish/app/frontend/package-lock.json`의 고엔트로피 문자열 — npm `integrity` **sha512 해시**
+- 각 `config.py` — 환경변수를 읽고 기본값이 빈 문자열
+
+## Task 10-1 차단 사유 — `OhMyEnglish`에 실제 비밀값이 이력에 있다
+
+**`docs/ops/shared-database-naming-rules.md`에 Postgres 역할 `en_coach`의 평문 비밀번호가 있다.**
+커밋 `7a5bfce`("docs: 전달 문서에 접속 비밀번호 포함")로 들어왔고 **현재 트리와 이력 양쪽에 존재**한다.
+`git log -S`로 확인한 결과 이 값이 등장한 커밋은 `7a5bfce` 하나이고, 다른 4개 리포에는 없다.
+
+문서 자신이 *"로컬 dev 전용이다. 이 문서가 git에 있으므로 원격·공유 환경에는 이 값을 쓰지 않는다"*라고 적어 두었다 —
+**그 전제는 리포가 비공개일 때만 성립한다.** 공개로 올리면 동작하는 자격증명을 게시하는 것이 되고,
+**파일을 지워도 커밋 `7a5bfce`는 남는다.** 공개 push 이후에는 GitHub이 캐시·인덱싱하므로 사후 제거로는 되돌릴 수 없다.
+
+선택지 (캡틴 결정):
+
+| 안 | 내용 | 비용 |
+|---|---|---|
+| **회전 후 공개** | 비밀번호를 새로 발급해 유출된 값을 무효화한 뒤 공개 push. 문서가 절차를 이미 담고 있다 — `podman exec -i ohmy-pg psql -U ohmy -d ohmyenglish -c "alter role en_coach password '<새값>'"` + 양쪽 `.env` 갱신 | 실행 중인 로컬 DB와 `OhMyEnglish`·`En-Coach` 양쪽 `.env`를 건드린다 → **그 세션 소관** |
+| **이 하나만 비공개** | `OhMyEnglish`만 `--private`로 push. 나머지 4개는 이미 공개 | 이력 정리 불필요, 즉시 가능 |
+| **이력 재작성 후 공개** | `git filter-repo`로 `7a5bfce`에서 값 제거 | **그 세션이 실시간 작업 중이라 매우 파괴적** — 권하지 않는다 |
 
 ## Task 8 차단 사유 — 2건
 
@@ -78,8 +119,10 @@ _최초 작성 2026-08-30 · 최종 개정 2026-08-30 (Gitea 폐기 → Backlog.
 - **`--ac`는 쉼표로 분리되지 않는다.** `--ac "a" --ac "b"`로 반복해야 한다. 실측으로 확인한 함정.
 - **`statuses`는 CLI로 못 바꾼다** — `backlog/config.yml` 직접 편집. 다른 프로젝트로 확대할 때 반복된다.
 - **`~/MyProject/Research`가 빈 채로 남아 있다.** 이 세션의 작업 디렉터리라서 지우지 않았다. 세션 종료 후 `rmdir`.
-- **`redstarh/WSEAgent`가 GitHub에 이미 있고 비어 있다.** Task 10에서 새로 만들지 말고 그 리포에 push한다.
-- **`ai-driven-development` remote가 404다.** Task 10에서 정리 대상.
+- ~~`redstarh/WSEAgent`가 비어 있다~~ → **해소.** 그 리포에 push 완료 (새로 만들지 않았다).
+- ~~`ai-driven-development` remote가 404다~~ → **범위 밖.** 캡틴 지시로 push하지 않는다.
+- **비밀값 스캔을 편입 절차에 고정한다.** 이번에 `OhMyEnglish` 1건을 잡았다. 공개 push는 되돌릴 수 없으므로
+  새 리포를 올릴 때마다 ① 추적 파일 패턴 스캔 ② `git log -S`로 이력 확인 ③ push 후 GitHub 트리 재검사를 반복한다.
 - `OhMyEnglish`의 `backlog/`·`.mcp.json`은 아직 untracked다. 그 세션이 커밋 시점을 정한다.
 
 ## 결정 기록 (뒤집힌 것 포함)
