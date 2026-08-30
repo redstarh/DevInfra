@@ -1,0 +1,8 @@
+.DS_Store
+*.swp
+*~
+
+# 로컬 전용 — forge 실사용 설정과 비밀값은 커밋하지 않는다
+app.ini
+*.secret
+secrets/

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gitea 도입 브리핑 — 다중 프로젝트 forge (2026-08-30)</title>
+<style>
+.viz-root{
+  color-scheme:light;
+  --plane:#f9f9f7; --surface-1:#fcfcfb;
+  --text-primary:#0b0b0b; --text-secondary:#52514e; --text-muted:#898781;
+  --grid:#e1e0d9; --baseline:#c3c2b7; --border:rgba(11,11,11,0.10);
+  --series-1:#2a78d6; --track:#cde2fb;
+  --good:#0ca30c; --warning:#fab219; --serious:#ec835a; --critical:#d03b3b;
+  --success-text:#006300;
+}
+@media(prefers-color-scheme:dark){
+  :root:where(:not([data-theme="light"])) .viz-root{
+    color-scheme:dark;
+    --plane:#0d0d0d; --surface-1:#1a1a19;
+    --text-primary:#ffffff; --text-secondary:#c3c2b7; --text-muted:#898781;
+    --grid:#2c2c2a; --baseline:#383835; --border:rgba(255,255,255,0.10);
+    --series-1:#3987e5; --track:#0d366b;
+    --success-text:#0ca30c;
+  }
+}
+:root[data-theme="dark"] .viz-root{
+  color-scheme:dark;
+  --plane:#0d0d0d; --surface-1:#1a1a19;
+  --text-primary:#ffffff; --text-secondary:#c3c2b7; --text-muted:#898781;
+  --grid:#2c2c2a; --baseline:#383835; --border:rgba(255,255,255,0.10);
+  --series-1:#3987e5; --track:#0d366b;
+  --success-text:#0ca30c;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--plane);color:var(--text-primary);
+ font:15px/1.62 system-ui,-apple-system,"Segoe UI","Apple SD Gothic Neo",sans-serif}
+main{max-width:62rem;margin:0 auto;padding:2.2rem 1.25rem 4rem}
+h1{font-size:1.55rem;margin:0 0 .3rem;letter-spacing:-.01em}
+h2{font-size:1.15rem;margin:2.8rem 0 .9rem;padding-bottom:.35rem;border-bottom:1px solid var(--grid)}
+h3{font-size:.97rem;margin:1.5rem 0 .5rem}
+p,li{margin:.45rem 0}
+.sub{color:var(--text-secondary);font-size:.87rem;margin-bottom:1.8rem}
+.card{background:var(--surface-1);border:1px solid var(--border);border-radius:10px;padding:1rem 1.15rem;margin:.9rem 0}
+.muted{color:var(--text-muted);font-size:.83rem}
+code{font:.86em ui-monospace,SFMono-Regular,Menlo,monospace;background:rgba(127,127,127,.14);padding:.1rem .32rem;border-radius:4px}
+pre{background:var(--surface-1);border:1px solid var(--border);border-radius:8px;padding:.85rem 1rem;overflow-x:auto;font:.8rem/1.55 ui-monospace,SFMono-Regular,Menlo,monospace}
+a{color:var(--series-1)}
+
+/* hero + stat tiles */
+.hero{background:var(--surface-1);border:1px solid var(--border);border-radius:12px;padding:1.4rem 1.3rem;margin:1.2rem 0}
+.hero .label{font-size:.8rem;color:var(--text-secondary)}
+.hero .value{font-size:3.2rem;font-weight:600;line-height:1.05;letter-spacing:-.02em;margin:.15rem 0}
+.hero .note{font-size:.84rem;color:var(--text-secondary)}
+.tiles{display:grid;gap:.7rem;grid-template-columns:repeat(2,1fr);margin:.9rem 0}
+@media(min-width:48rem){.tiles{grid-template-columns:repeat(5,1fr)}}
+.tile{background:var(--surface-1);border:1px solid var(--border);border-radius:10px;padding:.8rem .85rem}
+.tile .l{font-size:.75rem;color:var(--text-secondary);line-height:1.35}
+.tile .v{font-size:1.6rem;font-weight:600;letter-spacing:-.01em;margin-top:.2rem}
+.tile .u{font-size:.8rem;font-weight:400;color:var(--text-secondary);margin-left:.15rem}
+
+/* meter */
+.meter{margin:.5rem 0 .2rem}
+.meter .track{height:14px;background:var(--track);border-radius:7px;overflow:hidden}
+.meter .fill{height:100%;background:var(--series-1);border-radius:0 4px 4px 0}
+.meter .scale{display:flex;justify-content:space-between;font-size:.75rem;color:var(--text-muted);
+ margin-top:.35rem;font-variant-numeric:tabular-nums}
+
+/* tables */
+table{width:100%;border-collapse:collapse;font-size:.83rem;margin:.7rem 0}
+th,td{text-align:left;padding:.48rem .55rem;border-bottom:1px solid var(--grid);vertical-align:top}
+th{font-size:.73rem;text-transform:uppercase;letter-spacing:.04em;color:var(--text-secondary);font-weight:600;white-space:nowrap}
+td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tbody tr:hover{background:rgba(127,127,127,.06)}
+
+/* status chips — icon + label, never colour alone */
+.chip{display:inline-flex;align-items:center;gap:.28rem;font-size:.74rem;font-weight:600;
+ padding:.1rem .45rem;border-radius:999px;border:1px solid var(--border);white-space:nowrap}
+.chip .dot{width:7px;height:7px;border-radius:50%;flex:none}
+.on .dot{background:var(--good)} .off .dot{background:var(--text-muted)}
+.warn .dot{background:var(--warning)}
+
+/* flow */
+.flow{display:grid;gap:.55rem;margin:.9rem 0}
+.step{display:grid;grid-template-columns:1.7rem 1fr;gap:.7rem;align-items:start;
+ background:var(--surface-1);border:1px solid var(--border);border-radius:9px;padding:.7rem .85rem}
+.step .k{width:1.7rem;height:1.7rem;border-radius:50%;background:var(--series-1);color:#fff;
+ display:grid;place-items:center;font-size:.8rem;font-weight:600;flex:none}
+.step .t{font-weight:600;font-size:.9rem}
+.step .d{font-size:.83rem;color:var(--text-secondary);margin-top:.15rem}
+.loop{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;margin:.9rem 0;font-size:.82rem}
+.loop .n{background:var(--surface-1);border:1px solid var(--border);border-radius:7px;padding:.4rem .6rem}
+.loop .n.src{border-color:var(--series-1)}
+.loop .a{color:var(--text-muted)}
+</style>
+</head>
+<body class="viz-root">
+<main>
+
+<h1>Gitea 도입 브리핑 — 다중 프로젝트 forge</h1>
+<p class="sub">2026-08-30 · 설치 전 검토 · 결정 근거: <code>OhMyEnglish/docs/design/2026-08-30-wiki-task-tooling-decision.md</code> (<code>8cf5aea</code>)<br>
+용도가 한 프로젝트에서 <strong>여러 프로젝트 공통 관리</strong>로 확장됨 — 자원·구조를 그 기준으로 다시 계산했다.</p>
+
+<h2>한 줄 요약</h2>
+<div class="card">
+<p>맥에 <strong>단일 네이티브 프로세스 하나</strong>를 띄워 <strong>이슈 · PR 리뷰 · 칸반</strong>을 여러 프로젝트에 공통으로 제공한다. 외부 DB·컨테이너·리눅스 VM은 전부 0이다. 프로젝트가 늘어도 <strong>프로세스는 계속 1개</strong>다 — 이것이 다중 프로젝트 용도에서 Gitea를 고른 핵심 이유다.</p>
+<p class="muted">지금 <code>OhMyEnglish</code>는 remote가 아예 없어서 PR 개념이 성립하지 않는다. 로컬 forge를 remote로 붙이면 그 문제가 리포별로 한 번에 해결된다.</p>
+</div>
+
+<div class="hero">
+  <div class="label">Gitea 유휴 메모리 (빈 인스턴스)</div>
+  <div class="value">165 MB</div>
+  <div class="note">이 맥 전체 RAM 24,576MB의 <strong>0.67%</strong> · 현재 여유 메모리 7,142MB의 <strong>2.3%</strong></div>
+</div>
+
+<div class="tiles">
+  <div class="tile"><div class="l">상주 프로세스</div><div class="v">1<span class="u">개</span></div></div>
+  <div class="tile"><div class="l">외부 DB</div><div class="v">0<span class="u">개</span></div></div>
+  <div class="tile"><div class="l">컨테이너 · VM</div><div class="v">0<span class="u">개</span></div></div>
+  <div class="tile"><div class="l">리포 저장 (관리 대상 5개)</div><div class="v">26.6<span class="u">MB</span></div></div>
+  <div class="tile"><div class="l">관리 대상 프로젝트</div><div class="v">8<span class="u">개</span></div></div>
+</div>
+
+<h2>기능 요약 — 켤 것과 끌 것</h2>
+<p>Gitea는 GitHub 유사 기능을 넓게 덮는데, <strong>다 쓰면 리소스 이점이 사라진다.</strong> 아래는 이번 용도에 맞춘 취사선택이다. 기본값은 공식 <code>app.example.ini</code>와 소스에서 이 턴에 직접 확인했다.</p>
+<table>
+<thead><tr><th>기능</th><th>이번 용도</th><th>기본값</th><th>비고</th></tr></thead>
+<tbody>
+<tr><td><strong>이슈 트래커</strong> (라벨·마일스톤·담당자)</td><td><span class="chip on"><span class="dot"></span>켠다</span></td><td>on</td><td>버그·PR 트래킹 전용. 태스크 계획·상태의 정본은 프로젝트별 <code>TASKS.md</code>로 유지 (결정 2번)</td></tr>
+<tr><td><strong>Pull Request + 코드 리뷰</strong></td><td><span class="chip on"><span class="dot"></span>켠다</span></td><td>on</td><td>라인 코멘트·승인/변경요청. <strong>도입의 주된 이유</strong> — 리뷰 기록이 남을 자리</td></tr>
+<tr><td><strong>Projects</strong> (칸반 보드)</td><td><span class="chip on"><span class="dot"></span>켠다</span></td><td>on</td><td>org 레벨에 두면 여러 리포의 이슈를 한 보드에서 본다</td></tr>
+<tr><td><strong>마크다운 렌더링</strong> (리포 브라우저)</td><td><span class="chip on"><span class="dot"></span>켠다</span></td><td>on</td><td><code>docs/**.md</code>를 그대로 렌더링 — <strong>위키 도구를 안 세우는 근거</strong> (결정 3번)</td></tr>
+<tr><td><strong>Organization / Team</strong></td><td><span class="chip on"><span class="dot"></span>켠다</span></td><td>on</td><td>다중 프로젝트 그룹핑의 축</td></tr>
+<tr><td><strong>Mirror</strong> (외부 리포 미러링)</td><td><span class="chip warn"><span class="dot"></span>선택</span></td><td>on</td><td><code>[mirror] ENABLED = true</code>. 남의 리포(아래 3건)를 읽기용으로 끌어올 때만</td></tr>
+<tr><td><strong>Wiki</strong></td><td><span class="chip off"><span class="dot"></span>안 쓴다</span></td><td>on</td><td>별도 <code>&lt;repo&gt;.wiki</code> 리포가 정본이라 <code>docs/</code>를 정본으로 못 쓴다 — 구조적 불가 확정</td></tr>
+<tr><td><strong>Actions</strong> (CI)</td><td><span class="chip off"><span class="dot"></span>끈다</span></td><td><strong>on</strong></td><td><code>Enabled: true</code>가 하드코딩 기본값(<code>modules/setting/actions.go:47</code>). 러너가 없으면 동작은 안 하지만 UI가 남는다 → <code>[actions] ENABLED = false</code></td></tr>
+<tr><td><strong>Packages</strong> (레지스트리)</td><td><span class="chip off"><span class="dot"></span>끈다</span></td><td><strong>on</strong></td><td><code>[packages] ENABLED = false</code></td></tr>
+<tr><td><strong>코드 검색</strong> (repo 인덱서)</td><td><span class="chip off"><span class="dot"></span>끈다</span></td><td><strong>off</strong></td><td><code>REPO_INDEXER_ENABLED = false</code>가 기본 — 켜면 메모리·디스크가 는다. 기본값 유지</td></tr>
+<tr><td><strong>SSH 서버</strong></td><td><span class="chip off"><span class="dot"></span>끈다</span></td><td>off</td><td>로컬 전용이면 HTTP로 충분 (<code>DISABLE_SSH = true</code>)</td></tr>
+<tr><td><strong>LFS</strong></td><td><span class="chip off"><span class="dot"></span>끈다</span></td><td>off</td><td><code>LFS_START_SERVER = false</code></td></tr>
+<tr><td><strong>회원가입</strong></td><td><span class="chip off"><span class="dot"></span>끈다</span></td><td>off</td><td>1인용 (<code>DISABLE_REGISTRATION = true</code>)</td></tr>
+</tbody>
+</table>
+
+<h2>필요 자원</h2>
+
+<h3>메모리 — 여유분 대비</h3>
+<div class="card">
+  <div class="meter">
+    <div class="track"><div class="fill" style="width:2.3%"></div></div>
+    <div class="scale"><span>Gitea 165MB (2.3%)</span><span>여유 7,142MB</span></div>
+  </div>
+  <p class="muted" style="margin-top:.6rem">엄격한 쪽(전체 RAM 24,576MB가 아니라 <strong>현재 여유 7,142MB</strong>)을 분모로 잡았다. 이 165MB는 <strong>빈 인스턴스 하한</strong>이고, 이슈가 쌓이면 bleve 이슈 인덱서(<code>ISSUE_INDEXER_TYPE = bleve</code>, 기본값) 때문에 오른다.</p>
+</div>
+
+<h3>디스크 — Gitea가 실제로 저장하는 양</h3>
+<p>Gitea는 <strong>bare 리포</strong>를 저장하므로 비용은 작업 트리가 아니라 <code>.git</code> 크기다. 예컨대 <code>OhMyEnglish</code>는 전체 670MB지만 <code>.git</code>은 7.3MB다. 아래는 이 턴에 <code>du -sh</code>로 직접 측정한 값이다.</p>
+<table>
+<thead><tr><th>관리 대상 리포</th><th class="n">.git</th><th class="n">커밋</th><th>현재 remote</th></tr></thead>
+<tbody>
+<tr><td><code>~/AgentDev</code> (stock-agent)</td><td class="n">18.0 MB</td><td class="n">1,049</td><td>Synology NAS (<code>ssh://…/volume1/…</code>) — <strong>이미 self-hosted git이 있다</strong></td></tr>
+<tr><td><code>~/MyProject/OhMyEnglish</code></td><td class="n">7.3 MB</td><td class="n">107</td><td><strong>없음</strong> — PR이 가장 급한 곳</td></tr>
+<tr><td><code>~/MyProject/AllMyEnglish</code></td><td class="n">0.78 MB</td><td class="n">5</td><td>GitHub <code>redstarh/AllMyEnglish</code></td></tr>
+<tr><td><code>~/Documents/MyProject/ai-driven-development</code></td><td class="n">0.32 MB</td><td class="n">2</td><td>GitHub <code>redstarh/…</code></td></tr>
+<tr><td><code>~/Documents/MyProject/cursor-todo-app</code></td><td class="n">0.23 MB</td><td class="n">1</td><td>없음</td></tr>
+<tr><td colspan="4" style="border-bottom:none;padding-top:.7rem"><strong>소계 26.6 MB</strong> — 디스크 여유 225Gi 대비 사실상 0</td></tr>
+<tr><td class="muted"><code>En-Coach</code> (74MB) · <code>WSEAgent</code> (460KB) · <code>Research</code> (28KB)</td><td class="n muted">—</td><td class="n muted">—</td><td class="muted">아직 git 리포가 아니다 → <code>git init</code> 후 편입</td></tr>
+</tbody>
+</table>
+<p class="muted">별도로 남의 리포 클론 3건(<code>claude-code-tips</code> 19MB / <code>ml-intern</code> 5.8MB / <code>ai-driven-development-lecture</code> 544KB, 합 25.3MB)이 있다. <strong>관리 대상이 아니다</strong> — 필요하면 읽기용 pull mirror로만 둔다.</p>
+
+<h3>그 밖의 자원</h3>
+<table>
+<thead><tr><th>항목</th><th>값</th><th>근거</th></tr></thead>
+<tbody>
+<tr><td>상주 프로세스</td><td>1개 (<code>gitea web</code>)</td><td>단일 바이너리</td></tr>
+<tr><td>데이터베이스</td><td>SQLite 파일 1개</td><td><code>DB_TYPE = sqlite3</code> — 외부 DB 프로세스 0</td></tr>
+<tr><td>포트</td><td>127.0.0.1의 1개 (예: 3399)</td><td><code>HTTP_ADDR = 127.0.0.1</code> — 외부 노출 없음</td></tr>
+<tr><td>컨테이너 · 리눅스 VM</td><td>0</td><td>공식 darwin-arm64 바이너리 + Homebrew 병. <strong>이 회피가 핵심이다</strong> — 이 맥의 podman machine 게스트는 컨테이너 0개에서 이미 ~450MB를 먹는다</td></tr>
+<tr><td>머신 여력</td><td>Apple M4 · 10코어 · RAM 24,576MB · 디스크 225Gi 여유</td><td>이 턴 실측</td></tr>
+</tbody>
+</table>
+
+<h2>플로우 A — 설치 (1회성)</h2>
+<div class="flow">
+  <div class="step"><div class="k">1</div><div><div class="t"><code>brew install gitea</code></div><div class="d">네이티브 단일 바이너리. 현재 <strong>미설치</strong> 상태를 이 턴에 확인했다 (<code>command -v gitea</code> → 없음).</div></div></div>
+  <div class="step"><div class="k">2</div><div><div class="t">비밀값 3개 생성</div><div class="d"><code>gitea generate secret SECRET_KEY</code> · <code>INTERNAL_TOKEN</code> · <code>JWT_SECRET</code>. <strong>조사 때 쓴 값을 재사용하지 않는다</strong> — <code>/tmp/giteatest/</code>에 평문으로 남아 있다.</div></div></div>
+  <div class="step"><div class="k">3</div><div><div class="t"><code>app.ini</code> 작성 — 켤 것/끌 것을 명시</div><div class="d"><code>INSTALL_LOCK = true</code>로 설치 위저드를 건너뛴다. 이 최소 구성으로 HTTP 200이 뜨는 것은 조사 단계에서 실제로 확인됐다.</div></div></div>
+  <div class="step"><div class="k">4</div><div><div class="t">기동 → HTTP 200 확인 → 유휴 메모리 재측정</div><div class="d">165MB는 조사 시점 값이다. <strong>설치 후 이 맥에서 다시 재보고 그 값을 기록한다.</strong></div></div></div>
+  <div class="step"><div class="k">5</div><div><div class="t">관리자 계정 + Organization 1개 생성</div><div class="d"><code>gitea admin user create --admin</code>. org 아래에 프로젝트 리포를 모으면 칸반·권한이 한 곳에서 관리된다.</div></div></div>
+  <div class="step"><div class="k">6</div><div><div class="t">리포를 하나씩 편입 — <code>OhMyEnglish</code>부터</div><div class="d"><code>git remote add local http://127.0.0.1:&lt;포트&gt;/&lt;org&gt;/&lt;repo&gt;.git</code> → <code>git push --all</code>. remote가 없는 곳이 가장 이득이 크다.</div></div></div>
+  <div class="step"><div class="k">7</div><div><div class="t">백업 경로 정하기</div><div class="d">SQLite와 bare 리포가 한 디렉터리에 모인다. <code>gitea dump</code> 또는 그 디렉터리 자체를 백업 대상에 넣는다 — <strong>이슈·PR·리뷰 코멘트는 리포가 아니라 SQLite에만 있다.</strong></div></div></div>
+</div>
+
+<h2>플로우 B — 일상 운영</h2>
+<p>결정 2번(<code>TASKS.md</code>가 상태의 정본)을 지키는 형태다. Gitea는 <strong>태스크 원장을 대체하지 않고</strong> 리뷰·버그 경로만 담당한다.</p>
+<div class="loop">
+  <span class="n src"><code>TASKS.md</code> 태스크 선택 <span class="muted">(정본)</span></span><span class="a">→</span>
+  <span class="n">브랜치 · 커밋</span><span class="a">→</span>
+  <span class="n">push</span><span class="a">→</span>
+  <span class="n">PR 생성</span><span class="a">→</span>
+  <span class="n">리뷰 패스 · 라인 코멘트</span><span class="a">→</span>
+  <span class="n">수정</span><span class="a">→</span>
+  <span class="n">merge</span><span class="a">→</span>
+  <span class="n src"><code>TASKS.md</code> 상태 갱신 <span class="muted">(정본)</span></span>
+</div>
+<p class="muted">파란 테두리 두 칸이 정본이 사는 곳이다. 버그는 이 루프 밖에서 Gitea 이슈로 들어와 같은 자리에 합류한다. 두 정본을 만들지 않는 것이 이 배치의 목적이다 — 태스크 상태를 이슈에도 이중 등록하지 않는다.</p>
+
+<h2>다중 프로젝트 구조 — 결정이 필요한 3건</h2>
+<div class="card">
+<ol>
+<li><strong><code>AgentDev</code>(stock-agent)를 어떻게 할지.</strong> 이미 Synology NAS에 self-hosted git remote가 있다(커밋 1,049개). Gitea로 이전할지 · 둘을 병행할지 · 그대로 둘지를 정해야 한다. <span class="muted">병행은 remote 2개를 수동 동기화하는 비용이 붙는다.</span></li>
+<li><strong>GitHub에 있는 리포(<code>AllMyEnglish</code>, <code>ai-driven-development</code>)의 정본을 어디로 둘지.</strong> GitHub를 정본으로 두고 Gitea를 push mirror로 쓰는 방향과, Gitea를 정본으로 두고 GitHub로 밀어내는 방향이 갈린다.</li>
+<li><strong>git이 아닌 3개(<code>En-Coach</code> 74MB · <code>WSEAgent</code> · <code>Research</code>)를 지금 편입할지.</strong> <code>git init</code>이 먼저다. <code>Research</code>는 지금 이 문서가 있는 곳인데 버전 관리가 없다.</li>
+</ol>
+</div>
+
+<h2>이 브리핑이 확정하지 않은 것</h2>
+<div class="card">
+<ul>
+<li><strong>165MB는 이 맥에서 내가 재측정한 값이 아니다.</strong> 조사 세션이 20초 간격 3회로 168,864~169,232KB를 측정했다. 설치 후 재측정이 플로우 A-4에 들어가 있다.</li>
+<li><strong>리포 8개 · 이슈가 쌓인 뒤의 메모리를 모른다.</strong> 빈 인스턴스 하한만 안다. bleve 이슈 인덱서가 주 증가 요인이고, 예산(유휴 ≤512MB)을 위협하면 <code>ISSUE_INDEXER_TYPE = db</code>로 내리는 선택지가 있다.</li>
+<li><strong>백업·복구를 실제로 돌려보지 않았다.</strong> 이슈와 리뷰 코멘트가 SQLite에만 있으므로, <code>gitea dump</code> → 복원까지 1회 리허설하지 않으면 "이슈를 잃지 않는다"고 말할 수 없다.</li>
+<li><strong>버전 시효.</strong> Gitea v1.27.3은 2026-08-29 릴리스로 조사 시점 하루 차다. MIT.</li>
+</ul>
+</div>
+
+<p class="muted" style="margin-top:2.5rem;padding-top:1rem;border-top:1px solid var(--grid)">
+<strong>측정 출처 구분</strong> — ① 이 턴 직접 측정: 머신 자원(<code>sysctl</code>·<code>vm_stat</code>·<code>df</code>), 리포별 <code>.git</code> 크기·커밋 수·remote(<code>du</code>·<code>git</code>), <code>gitea</code> 미설치. ② 이 턴 공식 소스 확인: <code>app.example.ini</code>(packages·mirror·indexer 기본값), <code>modules/setting/actions.go:47</code>(Actions 기본 on), 위키 저장 구조(<code>models/repo/wiki.go:74</code>). ③ 조사 세션(3-14) 측정, 재확인 대상: Gitea 유휴 165MB, podman VM 게스트 ~450MB.<br>
+근거 보고서: <code>OhMyEnglish/docs/research/2026-08-30-wiki-task-tooling.html</code> (<code>3badf37</code>) · 결정: <code>docs/design/2026-08-30-wiki-task-tooling-decision.md</code> (<code>8cf5aea</code>)
+</p>
+
+</main>
+</body>
+</html>
