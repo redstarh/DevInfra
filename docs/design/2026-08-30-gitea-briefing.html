@@ -98,7 +98,7 @@ tbody tr:hover{background:rgba(127,127,127,.06)}
 <main>
 
 <h1>Gitea 도입 브리핑 — 다중 프로젝트 forge</h1>
-<p class="sub">2026-08-30 · 설치 전 검토 · 결정 근거: <code>OhMyEnglish/docs/design/2026-08-30-wiki-task-tooling-decision.md</code> (<code>8cf5aea</code>)<br>
+<p class="sub">2026-08-30 · 설치 전 검토 · 결정 근거: <code>DevInfra/docs/design/2026-08-30-wiki-task-tooling-decision.md</code> · 원장: <code>DevInfra/TASKS.md</code><br>
 용도가 한 프로젝트에서 <strong>여러 프로젝트 공통 관리</strong>로 확장됨 — 자원·구조를 그 기준으로 다시 계산했다.</p>
 
 <h2>한 줄 요약</h2>
@@ -227,7 +227,7 @@ tbody tr:hover{background:rgba(127,127,127,.06)}
 
 <p class="muted" style="margin-top:2.5rem;padding-top:1rem;border-top:1px solid var(--grid)">
 <strong>측정 출처 구분</strong> — ① 이 턴 직접 측정: 머신 자원(<code>sysctl</code>·<code>vm_stat</code>·<code>df</code>), 리포별 <code>.git</code> 크기·커밋 수·remote(<code>du</code>·<code>git</code>), <code>gitea</code> 미설치. ② 이 턴 공식 소스 확인: <code>app.example.ini</code>(packages·mirror·indexer 기본값), <code>modules/setting/actions.go:47</code>(Actions 기본 on), 위키 저장 구조(<code>models/repo/wiki.go:74</code>). ③ 조사 세션(3-14) 측정, 재확인 대상: Gitea 유휴 165MB, podman VM 게스트 ~450MB.<br>
-근거 보고서: <code>OhMyEnglish/docs/research/2026-08-30-wiki-task-tooling.html</code> (<code>3badf37</code>) · 결정: <code>docs/design/2026-08-30-wiki-task-tooling-decision.md</code> (<code>8cf5aea</code>)
+근거 보고서: <code>docs/research/2026-08-30-wiki-task-tooling.html</code> · 결정: <code>docs/design/2026-08-30-wiki-task-tooling-decision.md</code> (경로는 <code>DevInfra</code> 기준). 두 문서는 원래 <code>OhMyEnglish</code>에 커밋됐고(<code>3badf37</code>·<code>8cf5aea</code>) 2026-08-30에 <code>9165f06</code>으로 이관됐다 — 그쪽 이력에 남아 있다.
 </p>
 
 </main>

@@ -54,9 +54,9 @@ _최초 작성: 2026-08-30_
 | # | Task | 상태 | 완료 증거 |
 |--:|---|---|---|
 | 0 | `DevInfra` 신설 + `Research` 내용 이관 | 완료 | 파일 4개 이관 확인 (2026-08-30) |
-| 1 | `En-Coach/.gitignore` 보강 — `.venv`·`__pycache__`·`.pytest_cache`·`egg-info` | 대기 | `git status --short` 에 `.venv` 미출현 |
-| 2 | `git init` 3개 (`DevInfra`·`En-Coach`·`WSEAgent`) + 최초 커밋 | 대기 | 리포별 `git log --oneline -1` · 커밋에 venv/캐시 없음 |
-| 3 | `OhMyEnglish`에서 이관된 문서 2건 `git rm` | 대기 | `git log -1` · 두 곳에 정본이 남지 않음을 확인 |
+| 1 | `En-Coach/.gitignore` 보강 — `.venv`·`__pycache__`·`.pytest_cache`·`egg-info` | 완료 | `check-ignore -v`: `app/backend/.env` → `.gitignore:2` · `.venv/pyvenv.cfg` → `.gitignore:5` |
+| 2 | `git init` 3개 (`DevInfra`·`En-Coach`·`WSEAgent`) + 최초 커밋 | 완료 | `DevInfra 507f948` 6파일·`.git` 160K · `En-Coach 7b9516d` 45파일·364K · `WSEAgent 1b429ed` 28파일·384K · **금지패턴 0건** (스테이징 검사) |
+| 3 | `OhMyEnglish`에서 이관된 문서 2건 `git rm` | 완료 | `9165f06` · 이관 전 `diff -q` 로 사본 동일성 확인 · `docs/research/` 디렉터리 소멸 확인 |
 | 4 | `brew install gitea` | 대기 | `gitea --version` 출력 (현재 미설치 확인됨) |
 | 5 | 비밀값 3개 생성 + `app.ini` 작성 — 브리핑의 켤/끌 목록 반영 | 대기 | `app.ini` 내용. **`/tmp/giteatest/`의 조사용 평문 비밀값 재사용 안 함** 확인 |
 | 6 | 기동 → HTTP 200 → **유휴 메모리 이 맥에서 실측** | 대기 | `curl -o /dev/null -w '%{http_code}'` = 200 · RSS 20초 간격 3회 · 프로세스 수 1 |
@@ -74,8 +74,9 @@ _최초 작성: 2026-08-30_
 
 ## 미결 · 리스크
 
-- **`En-Coach`에 `app/backend/.env`가 실재한다.** `.gitignore`가 이 한 줄만 덮고 있었다. Task 1에서 나머지를
-  보강하되 `.env`가 이미 무시되고 있음을 재확인한다 — 비밀값이 최초 커밋에 들어가면 이력에서 지우기 어렵다.
+- ~~`En-Coach`에 `app/backend/.env`가 실재한다~~ → **해소.** `check-ignore`로 무시를 확인하고 커밋했다.
+  최초 커밋에 들어간 것은 `app/backend/.env.example`(템플릿)뿐이다. 다만 **`.gitignore`가 `.env` 한 줄만 덮고
+  있었다는 사실은 남는다** — 다른 프로젝트를 편입할 때 같은 검사를 반복한다.
 - **`~/MyProject/Research` 디렉터리가 빈 채로 남아 있다.** 이 세션의 작업 디렉터리라서 지우지 않았다.
   세션 종료 후 `rmdir` 하면 된다.
 - **유휴 165MB는 이 맥에서 재측정한 값이 아니다.** 조사 세션(3-14)이 20초 간격 3회로 168,864~169,232KB를
