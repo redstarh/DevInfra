@@ -92,7 +92,7 @@ API/DB 산출물과 cleanup assertions를 함께 확인한다.
 
 - 장점: 가장 단순하고 CI에 그대로 옮기기 쉽다.
 - 주의: 현재 사용자 셸의 환경 변수를 테스트 결과로 오해하지 않도록 명시적 테스트 환경을 사용한다.
-- 계약 매핑: 입력 채널은 표준 입력/CLI 인자, runner 식별자는 process ID 또는 run ID, 완료 신호는 종료 코드와 직접 산출물이다.
+- 계약 매핑: 입력 채널은 표준 입력/CLI 인자, runner 식별자는 process ID 또는 run ID, 출력 수집은 stdout/stderr와 테스트 artifact, 완료 신호는 종료 코드와 직접 산출물이다.
 
 ### B. Orca 터미널
 
@@ -147,6 +147,7 @@ TestAgent가 만든 tmux 세션과 Orca 테스트 터미널은 기본적으로 *
 | tmux | session/window/pane와 run ID | 정확히 그 테스트 session만 종료 | 세션 목록에서 run ID가 사라졌는지 확인 |
 | Orca | terminal handle과 workspace | 정확히 그 handle의 테스트 terminal만 닫기 | workspace terminal 목록에서 handle이 없는지 확인 |
 | 일반 셸 | process/run ID, 임시 경로 | 자식 process와 임시 artifact 정리 | 종료 코드와 임시 경로·process 잔존 여부 확인 |
+| 코딩 에이전트 subagent | subagent 이름과 그가 만든 tmux 세션·임시 경로 | 프로세스 자체는 정리 대상이 아니다 — 만든 자원만 위 규칙대로 정리 | 보고의 정리 항목과 실제 잔존 여부를 대조 |
 
 - 생성 전에 대상 이름·handle이 기존 사용자 세션인지 확인한다. TestAgent가 만들지 않은 세션,
   pane, terminal, workspace 등록은 종료·삭제하지 않는다.

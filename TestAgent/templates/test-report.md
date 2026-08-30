@@ -36,6 +36,7 @@
 | 비용 예약·외부 호출 |  |  |
 | tmux TestAgent 세션 |  |  |
 | Orca TestAgent 터미널 |  |  |
+| subagent가 만든 자원 |  |  |
 
 ## 후속 조치
 
