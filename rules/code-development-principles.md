@@ -208,6 +208,12 @@ Python 심볼/참조/정의 추적은 네이티브 `LSP` 툴 우선(서버: `pyr
 
 ---
 
+_2026-08-30 — 원장 도구 참조를 `task-management.md`로(9단계). **지우려다 유지로 판정한 2건을 근거와 함께 못 박는다** —_
+_다시 삭제 후보로 올리지 말 것: ① **LSP 우선 원칙 절**(§0-2) — `four-lenses-design-review.md`가 `LSP(findReferences)`·_
+_`goToDefinition`을 **7곳에서** 쓴다. 지우면 그 표들이 전제하는 도구 지침이 사라진다. ② **§2 `[skip ci]` 규칙** —_
+_참조하는 SoP가 실재하고(`~/AgentDev/docs/ops/github-ci-cost-reduction-sop.md`) 다른 파일이 §2를 재서술하지 않아_
+_중복이 아니다. (이 판정은 원래 `OhMyEnglish/TASKS.md` F절에 있었다 — 범위가 `~/.claude/**`이므로 이리로 옮겼다.)_
+
 _최종 수정: 2026-08-28 — `<handoff>` → `<work_continuity>`(3층 분리) 개칭, 세션 인계 트리거·절차 연결(`session-handover.md`)._
 _이전: 2026-08-27 — handoff 연속성 규칙 연결. 9단계에 "handoff 마감" 행, §0-1 세션 분리 규칙에 갱신 시점 명시. 규약 본문은 CLAUDE.md `<handoff>`(중복 서술 금지)._
 _이전: 2026-08-19 — superpowers v6.3.0 통합. 5단계를 TDD(test-first)로 재정의, 6단계는 "테스트 보강"으로 변경. §0-2 Skill 열에 superpowers 매핑._
