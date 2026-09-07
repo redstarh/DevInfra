@@ -77,3 +77,17 @@ scripts/setup-package-manager.js
 scripts/status-line.sh
 scripts/lib/
 scripts/hooks/
+
+# 에이전트 런타임 상태 (2026-09-08) — ⚠️ daemon/control.key 는 비밀키다
+daemon/
+jobs/
+scheduled_tasks.json
+scheduled_tasks.lock
+.last-cleanup
+.last-update-result.json
+mcp-needs-auth-cache.json
+
+# 도구가 만드는 백업 (*.backup.* 패턴이 .bak 을 못 잡는다)
+*.bak
+*.bak-*
+*.bak.*
