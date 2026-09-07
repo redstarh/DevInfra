@@ -37,9 +37,13 @@
 
 ```bash
 # 번호는 기존 최대값 +1 (이름 규칙을 발명하지 않는다)
-PREFIX=$(tmux display-message -p '#{session_group}')      # 예: claude_air_3
+# ⚠️ **접두사는 `#{session_group}`이 아니라 세션 **이름**에서 유도한다** (2026-09-05 실측).
+#    `#{session_group}`은 세션이 그룹에 속하지 않으면 **빈 문자열**이고, 그것이 정상 동작이다
+#    — 그러면 `PREFIX`가 비어 새 이름이 그냥 `-2`가 된다. `claude_air_1-1`에서 실제로 그랬다.
+CUR=$(tmux display-message -p '#{session_name}')          # 예: claude_air_1-1
+PREFIX="${CUR%-*}"                                        # 예: claude_air_1
 LAST=$(tmux ls -F '#{session_name}' | sed -n "s/^${PREFIX}-\([0-9]*\)$/\1/p" | sort -n | tail -1)
-NEW="${PREFIX}-$((LAST+1))"
+NEW="${PREFIX}-$((LAST+1))"                               # 예: claude_air_1-2
 
 # iTerm2 새 창에서 그 tmux 세션을 붙인 채로 띄운다.
 # ⚠️ tmux를 **절대 경로**로 준다 — iTerm은 이 command를 로그인 셸 없이 exec하므로
@@ -108,6 +112,10 @@ tmux capture-pane -p -t "$TARGET" | tail -5   # 도착을 눈으로 확인
 ---
 
 _최초 작성: 2026-08-28 — 캡틴 지시(컨텍스트 70% 마감 + tmux 인계 확인)를 실행 가능한 형태로._
+_2026-09-05 실측 정정: §3 의 접두사 유도를 `#{session_group}` → **세션 이름**(`${CUR%-*}`)으로 바꿨다._
+_그룹에 속하지 않은 세션은 `session_group`이 **빈 문자열**이고(정상 동작) 그러면 새 이름이 `-2`가 된다 —_
+_`claude_air_1-1`에서 실제로 그랬다. 이전 판이 "다음 인계부터 정상 작동한다"고 예측했으나 틀렸다._
+
 _2026-08-28 실측 정정: iTerm `command`는 로그인 셸을 거치지 않아 `tmux`를 절대 경로로 줘야 한다 —
 첫 시도가 창만 열고 세션을 만들지 못했다. 생성 후 `tmux ls`로 확인하는 줄을 추가했다._
 

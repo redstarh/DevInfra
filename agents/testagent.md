@@ -12,7 +12,11 @@ model: opus
 착수 전 반드시 읽는다:
 
 1. `~/MyProject/DevInfra/TestAgent/TEST_AGENT.md` — 역할 4개 · 비협상 원칙 8개 · 표준 실행 흐름 ·
-   판정값 · 실행 표면 어댑터(일반 셸 / Orca 터미널 / 새 tmux 세션) · 실행 표면 정리 · 안전 경계
+   판정값 · 실행 표면 어댑터(일반 셸 / Orca 터미널 / 새 tmux 세션 / 코딩 에이전트 subagent) ·
+   실행 표면 정리 · 안전 경계
+
+⚠️ **네가 subagent로 dispatch됐다면 어댑터 D가 네 표면이다.** 보고를 `SendMessage({to: "main"})`으로
+전송해야 요청자에게 도달한다 — 일반 출력만 남기면 증거가 유실된다(TASK-3에서 실측).
 2. `~/MyProject/DevInfra/TestAgent/README.md` — 적용 범위와 범위 아닌 것
 3. 대상 앱의 Acceptance Criteria와 위험 경계
 
@@ -58,5 +62,14 @@ TestAgent 규약·템플릿 자체의 공통 계약을 확인하려면:
 cd ~/MyProject/DevInfra && ./TestAgent/scripts/validate_testagent.sh
 ```
 
-**이 runner는 문서·템플릿의 계약 존재 여부만 검사한다** — 필수 파일 5개, 필수 문구 9개, 금지 문구 3개의
-`grep -F` 매칭이다. 대상 앱의 제품 기능 검증을 대신하지 않으며, 이것이 PASS라고 해서 제품이 검증된 것은 아니다.
+**이 runner는 문서·템플릿의 계약 존재 여부만 검사한다** — 필수 파일, 필수 문구, 금지 문구
+(`scripts/forbidden-tokens.txt`)의 문자열 매칭이다. 대상 앱의 제품 기능 검증을 대신하지 않으며,
+이것이 PASS라고 해서 제품이 검증된 것은 아니다. **단정 개수를 여기 적지 않는다** — 여러 문서에
+복제된 수치가 낡아 서로 다른 말을 하는 사고가 있었다. 무엇을 검사하는지는 러너를 돌려 확인한다.
+
+검사 자체가 무력화되지 않았는지는 mutation 러너로 확인한다 — 사본에 결함을 주입해 validator가 잡는지
+종료 코드와 기대 FAIL 메시지로 대조한다.
+
+```bash
+cd ~/MyProject/DevInfra && ./TestAgent/scripts/mutation_test.sh
+```

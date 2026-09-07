@@ -19,7 +19,6 @@ Claude Code 네이티브 에이전트 기반 오케스트레이션 환경.
 | 디버깅 | `general-purpose` | opus | 근본원인 분석, 회귀 추적 |
 | 문서 작성 | `general-purpose` | haiku/sonnet | README, API docs |
 | Claude API/CC 질문 | `claude-code-guide` | — | Claude Code·Agent SDK·Claude API 사용법 |
-| 장기기억 | `hermes` | — | 세션 간 맥락 recall/save |
 
 프로젝트 전용 agent(`ame-*`, `wse-*`)는 각 프로젝트 `.claude/agents/` 정의를 우선한다.
 

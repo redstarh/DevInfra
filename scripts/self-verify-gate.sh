@@ -33,12 +33,14 @@ fi
 
 # 컴팩트 리마인더만 주입 (전체 규칙은 rules/self-verification-gate.md에서 세션 시작 시 1회 로드)
 # 2026-04-09: 기존 ~650토큰/프롬프트 → ~30토큰/프롬프트로 최적화
+# 2026-08-28: 5줄 → 3줄. 지운 것 — "모든 분석·설계 결론에 critic"(과한 트리거. 위임 범위는
+#   rules/self-verification-gate.md가 "되돌리기 어려운 결론"으로 좁혀 소유한다) · 기준 파일
+#   포인터(CLAUDE.md가 세션 시작에 이미 로드한다). 남긴 3줄은 실제 실패 모드를 막는다.
 read -r -d '' CHECKLIST << 'GATE' || true
 <svg>
 턴마다 반드시 1문장 이상 텍스트 출력 — tool만 쓰고 end_turn 금지.
-분석/조사/설계 결론은 critic 역할 agent(general-purpose, opus)로 독립 검증 후 제시. 코드 완료는 code-reviewer 역할(opus).
-실행/확인/설정/잡담/진행안내는 바로 답변. 검증 테이블 수기 작성 금지 — agent에 위임.
-기준: rules/self-verification-gate.md
+검증 명령은 메인이 직접 실행해 증거 확보, 판정만 agent 위임 — 검증 테이블 수기 작성 금지.
+실행/확인/설정/잡담/진행안내는 skill 강제 없이 바로 답변.
 </svg>
 GATE
 
