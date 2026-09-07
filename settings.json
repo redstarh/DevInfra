@@ -38,17 +38,6 @@
   "hooks": {
     "UserPromptSubmit": [
       {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.claude/scripts/self-verify-gate.sh",
-            "timeout": 5,
-            "statusMessage": "Self-verification gate..."
-          }
-        ]
-      },
-      {
         "hooks": [
           {
             "type": "command",

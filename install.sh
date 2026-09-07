@@ -16,7 +16,6 @@
 #   - settings.json (hooks, plugins 1개(pyright-lsp), statusLine, 모델 env)
 #   - settings.local.json (permissions, env)
 #   - rules/ 4개 (SVG, 4-Lenses, 개발 원칙, 코드 리뷰)
-#   - scripts/self-verify-gate.sh (SVG hook)
 #   - statusline.sh (모델/컨텍스트/비용 표시)
 
 set -euo pipefail
@@ -90,11 +89,9 @@ mkdir -p "$CLAUDE_DIR/rules/common" "$CLAUDE_DIR/scripts"
 if [ "$SCRIPT_DIR" != "$CLAUDE_DIR" ]; then
     cp "$SCRIPT_DIR/rules/"*.md "$CLAUDE_DIR/rules/" 2>/dev/null || true
     cp "$SCRIPT_DIR/rules/common/"*.md "$CLAUDE_DIR/rules/common/" 2>/dev/null || true
-    cp "$SCRIPT_DIR/scripts/self-verify-gate.sh" "$CLAUDE_DIR/scripts/" 2>/dev/null || true
 fi
-chmod +x "$CLAUDE_DIR/scripts/self-verify-gate.sh" 2>/dev/null || true
 RULE_COUNT=$(find "$CLAUDE_DIR/rules" -name '*.md' | wc -l | tr -d ' ')
-echo "  ✓ rules ${RULE_COUNT}개, scripts/self-verify-gate.sh"
+echo "  ✓ rules ${RULE_COUNT}개"
 echo ""
 
 # ── Step 4: Plugins ──
@@ -119,7 +116,6 @@ echo ""
 # ── Step 5: 실행 권한 ──
 echo "[5/6] 실행 권한 확인..."
 chmod +x "$CLAUDE_DIR/statusline.sh" 2>/dev/null && echo "  ✓ statusline.sh"
-chmod +x "$CLAUDE_DIR/scripts/self-verify-gate.sh" 2>/dev/null && echo "  ✓ self-verify-gate.sh"
 echo ""
 
 # ── Step 6: 검증 ──
@@ -139,7 +135,6 @@ check_file "$CLAUDE_DIR/AGENTS.md" "AGENTS.md"
 check_file "$CLAUDE_DIR/settings.json" "settings.json"
 check_file "$CLAUDE_DIR/settings.local.json" "settings.local.json"
 check_file "$CLAUDE_DIR/statusline.sh" "statusline.sh"
-check_file "$CLAUDE_DIR/scripts/self-verify-gate.sh" "scripts/self-verify-gate.sh"
 check_file "$CLAUDE_DIR/rules/self-verification-gate.md" "rules/SVG"
 check_file "$CLAUDE_DIR/rules/four-lenses-design-review.md" "rules/4-Lenses"
 check_file "$CLAUDE_DIR/rules/code-development-principles.md" "rules/개발원칙"

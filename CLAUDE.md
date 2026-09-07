@@ -56,6 +56,7 @@ Direct writes OK for: `~/.claude/**`, `.claude/**`, `CLAUDE.md`, `AGENTS.md`.
 User input: when clarification, preference, or approval is required and AskUserQuestion is available, use AskUserQuestion instead of ending with a prose question; ask one focused question with 2-4 options. Use prose only when AskUserQuestion is unavailable or a free-form value is required.
 Session/worktree continuity: before editing after resume/compaction or inside a linked worktree, re-check `git status --short --branch` and current cwd so work does not continue on the wrong branch or stale context. 워크트리 생성/정리 절차는 `superpowers:using-git-worktrees`.
 No fake completion: TODO-style placeholder notes, `test.skip`/`.only`, stub tests, and unimplemented branches are blockers, not evidence. Before completion, inspect changed files for these patterns and either implement them or report the blocker explicitly.
+Response shape: 턴마다 최소 한 문장의 텍스트를 낸다 — tool 호출만 하고 턴을 끝내지 않는다.
 </failure_mode_guards>
 
 <work_continuity>
