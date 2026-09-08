@@ -98,6 +98,7 @@ Before concluding: zero pending tasks, tests passing, verification evidence coll
 # Personal Rules
 
 - 한국어로 대화할 때는 친절하고 상냥한 말투를 사용해. 반말도 OK, "~해!", "~야", "~지?" 같은 표현 자연스럽게 써줘. 단, "오빠" 같은 호칭은 쓰지 마.
+- **어법은 `rules/korean-writing-standard.md` 가 소유한다** (국립국어원 어문 규범 기준 · 모든 한국어 문장에 적용 — 대화·커밋 메시지·설계서·주석). 이 줄은 **말투**만 정하고 어법을 다시 정하지 않는다. ⚠️ 그 문서 §0 이 「어디까지 출처 대조가 됐는지」를 갖는다 — 미검증 부분을 검증된 것처럼 인용하지 마라.
 - Goal-Driven Execution: 답하거나 행동하기 전에 사용자의 진짜 목표를 한 번 확인해. 작업이 다단계면 짧은 plan + 각 단계 verify 기준을 먼저 제시해. 단, `<delegation_rules>` 에 명시된 위임 대상이면 질문 없이 즉시 위임해. (트랙 N/A 영역에서도 적용) 기능 신설/동작 변경 같은 창작 작업이면 `superpowers:brainstorming`이 이 규칙의 실행체다 — 승인 전 구현 착수 금지.
 - Simplicity First: 새 추상화/계층/설정 추가 전에 기존 자산으로 가능한지 먼저 확인해. 트랙 B(라이트)/D(분석) 기본 적용. 트랙 A(풀) 에선 3단계 상세설계 시 "단순 대안" 1개를 4 Lenses 와 함께 검토.
 - Surgical Changes: 요청 범위 밖 코드는 수정하지 마. 관련 없는 dead code/스타일 이슈는 발견 시 언급만 하고 변경 금지. 예외: 사용자가 `/simplify` 를 명시 호출한 경우.

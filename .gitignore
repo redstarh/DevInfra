@@ -60,7 +60,10 @@ commands/
 docs/
 tests/
 mcp-configs/
-skills/
+# skills/ 는 추적한다 (2026-09-08 사용자 결정) — 내가 만든 스킬이 로컬에만 있으면
+# 기계가 바뀔 때 사라진다. 비밀값 검사 0건 · 88K · 12파일이라 비용이 낮다.
+# ⚠️ `computer-use`·`orchestration` 은 `~/.agents/skills/` 로 가는 심링크다 — git 은
+#    심링크로 저장하므로 복원한 기계에 그 경로가 없으면 끊긴 링크가 된다(내용 손실은 아니다).
 
 # 자동 생성 문서
 README.md
