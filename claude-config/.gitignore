@@ -1,0 +1,96 @@
+# 세션/캐시/임시 (추적 불필요)
+sessions/
+session-data/
+session-env/
+shell-snapshots/
+statsig/
+telemetry/
+metrics/
+cache/
+paste-cache/
+file-history/
+debug/
+downloads/
+tasks/
+todos/
+plans/
+ide/
+hud/
+channels/
+teams/
+
+# 플러그인 (각자 설치)
+plugins/
+
+# OMC 런타임 상태
+.omc/
+homunculus/
+
+# 로그/히스토리
+*.log
+*.jsonl
+history.jsonl
+bash-commands.log
+cost-tracker.log
+
+# 프로젝트별 세션 데이터
+projects/
+
+# 백업
+backup-*/
+backups/
+*.backup.*
+
+# 잠금/상태 파일
+.update.lock
+.session-stats.json
+stats-cache.json
+.omc-version.json
+
+# SA 전용 (프로젝트 repo에서 관리)
+omc_config.openclaw.json
+
+# 민감 정보
+.omc-config.json
+
+# OMC/ECC 자동 생성 (플러그인 설치 시 재생성)
+.agents/
+hooks/
+commands/
+docs/
+tests/
+mcp-configs/
+# skills/ 는 추적한다 (2026-09-08 사용자 결정) — 내가 만든 스킬이 로컬에만 있으면
+# 기계가 바뀔 때 사라진다. 비밀값 검사 0건 · 88K · 12파일이라 비용이 낮다.
+# ⚠️ `computer-use`·`orchestration` 은 `~/.agents/skills/` 로 가는 심링크다 — git 은
+#    심링크로 저장하므로 복원한 기계에 그 경로가 없으면 끊긴 링크가 된다(내용 손실은 아니다).
+
+# 자동 생성 문서
+README.md
+PLUGIN_SCHEMA_NOTES.md
+the-security-guide.md
+statusline-simple.sh
+
+# SA 전용 / ECC 잔재 스크립트
+scripts/sa-rule-loader.sh
+scripts/session-guard.sh
+scripts/session-rule-check.sh
+scripts/orchestration-status.js
+scripts/setup-package-manager.js
+scripts/status-line.sh
+scripts/lib/
+scripts/hooks/
+
+# 에이전트 런타임 상태 (2026-09-08) — ⚠️ daemon/control.key 는 비밀키다
+daemon/
+jobs/
+scheduled_tasks.json
+scheduled_tasks.lock
+.last-cleanup
+.last-update-result.json
+mcp-needs-auth-cache.json
+
+# 도구가 만드는 백업 (*.backup.* 패턴이 .bak 을 못 잡는다)
+*.bak
+*.bak-*
+*.bak.*
